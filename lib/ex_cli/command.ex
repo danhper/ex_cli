@@ -1,7 +1,5 @@
 defmodule ExCLI.Command do
-  @moduledoc """
-  A command of the CLI application
-  """
+  @moduledoc false
 
   defstruct [:name, :description, :long_description, arguments: [], options: []]
 

@@ -3,34 +3,7 @@ defmodule ExCLI.DSLTest do
 
   import ExUnit.CaptureIO
 
-  defmodule SampleCLI do
-    use ExCLI.DSL
-
-    name "mycli"
-    description "My CLI"
-    long_description """
-    This is my long description
-    """
-
-    option :verbose, help: "Increase the verbosity level", aliases: [:v], count: true
-
-    command :hello do
-      description "Greets the user"
-      long_description """
-      Gives a nice a warm greeting to whoever would listen
-      """
-
-      argument :name
-      option :from, help: "the sender of hello"
-
-      run context do
-        if from = context.options[:from] do
-          IO.write("#{from} says: ")
-        end
-        IO.puts("Hello #{context.name}!")
-      end
-    end
-  end
+  alias MyApp.SampleCLI
 
   test "creates an app object" do
     assert function_exported?(SampleCLI, :__app__, 0)
@@ -62,7 +35,7 @@ defmodule ExCLI.DSLTest do
       SampleCLI.__run__(:i_dont_exist, %{})
     end
     assert capture_io(fn ->
-      SampleCLI.__run__(:hello, %{name: "world", options: [from: "Daniel"]})
+      SampleCLI.__run__(:hello, %{name: "world", options: [from: "Daniel", verbose: 0]})
     end) == "Daniel says: Hello world!\n"
   end
 
