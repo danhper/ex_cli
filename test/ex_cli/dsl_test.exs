@@ -58,7 +58,7 @@ defmodule ExCLI.DSLTest do
   end
 
   test "generates __run__ clauses" do
-    assert_raise FunctionClauseError, fn ->
+    assert_raise ArgumentError, "command i_dont_exist does not exist", fn ->
       SampleCLI.__run__(:i_dont_exist, %{})
     end
     assert capture_io(fn ->
