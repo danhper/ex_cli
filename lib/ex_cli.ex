@@ -6,8 +6,8 @@ defmodule ExCLI do
   end
 
   def process(module, args, options \\ []) do
-    cli = module.__cli__
-    IO.inspect(cli)
+    app = module.__app__
+    IO.inspect(app)
     IO.inspect(args)
     IO.inspect(options)
   end

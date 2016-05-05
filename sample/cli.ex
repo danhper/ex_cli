@@ -14,13 +14,13 @@ defmodule MyApp.SampleCLI do
     """
 
     argument :name
-    option :from, help: "the sender of the hello"
+    option :from, help: "the sender of hello"
 
-    run do
-      if from = options[:from] do
-        IO.puts("#{from} says")
+    run context do
+      if from = context.options[:from] do
+        IO.write("#{from} says: ")
       end
-      IO.puts("Hello #{name}")
+      IO.puts("Hello #{context.name}!")
     end
   end
 end

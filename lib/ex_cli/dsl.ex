@@ -2,7 +2,9 @@ defmodule ExCLI.DSL do
   defmacro __using__(_opts) do
     quote do
       import ExCLI.DSL
-      @cli %ExCLI.CLI{}
+      @app %ExCLI.App{
+        name: ExCLI.App.default_name(__MODULE__)
+      }
       @before_compile unquote(__MODULE__)
       @command nil
     end
@@ -13,7 +15,7 @@ defmodule ExCLI.DSL do
       if @command do
         raise "name cannot be called inside a command block"
       else
-        @cli Map.put(@cli, :name, name)
+        @app Map.put(@app, :name, name)
       end
     end
   end
@@ -25,7 +27,7 @@ defmodule ExCLI.DSL do
         if @command do
           @command Map.put(@command, key, value)
         else
-          @cli Map.put(@cli, key, value)
+          @app Map.put(@app, key, value)
         end
       end
     end
@@ -44,32 +46,18 @@ defmodule ExCLI.DSL do
   defmacro option(name, options \\ []) do
     quote bind_quoted: [name: name, options: options] do
       if @command do
-        @command Map.put(@command, :options, [{name, options}, @command.options])
+        @command Map.put(@command, :options, [{name, options} | @command.options])
       else
-        raise "option can only be used inside a command"
+        @app Map.put(@app, :options, [{name, options} | @app.options])
       end
     end
   end
 
-  defmacro run(do: block) do
-    quote bind_quoted: [block: Macro.escape(block, unquote: true)] do
-      command = @command
-      name = command.name
-      args = Enum.map(command.arguments, &elem(&1, 0))
-      ExCLI.DSL.__define_command__(name, args, block)
-    end
-  end
-
-  defmacro __define_command__(name, args, block) do
-    quote bind_quoted: [name: name, args: args, block: block] do
-      arguments = Enum.map args, fn arg ->
-        var = Macro.var(arg, nil)
-        quote do
-          var!(unquote(var))
-        end
-      end
-      @doc false
-      def __run__(unquote(name), unquote_splicing(arguments), var!(options)) do
+  defmacro run({context, _, _}, do: block) do
+    quote bind_quoted: [context: context, block: Macro.escape(block, unquote: true)] do
+      name = @command.name
+      context = Macro.var(context, nil)
+      def __run__(unquote(name), var!(unquote(context))) do
         unquote(block)
       end
     end
@@ -79,7 +67,7 @@ defmodule ExCLI.DSL do
     quote do
       @command %ExCLI.Command{name: unquote(name)}
       unquote(block)
-      @cli Map.put(@cli, :commands, [@command | @cli.commands])
+      @app Map.put(@app, :commands, [@command | @app.commands])
       @command nil
     end
   end
@@ -87,8 +75,8 @@ defmodule ExCLI.DSL do
   defmacro __before_compile__(_env) do
     quote do
       @doc false
-      def __cli__ do
-        @cli
+      def __app__ do
+        @app
       end
 
       def process(args, options \\ []) do
