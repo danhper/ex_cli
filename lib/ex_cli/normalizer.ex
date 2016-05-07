@@ -5,7 +5,13 @@ defmodule ExCLI.Normalizer do
     do_normalize(args, [])
   end
 
-  defp do_normalize([], acc), do: Enum.reverse(acc)
+  defp do_normalize([], acc) do
+    acc
+    |> Enum.map(fn {type, value} ->
+      {type, String.to_atom(value)}
+    end)
+    |> Enum.reverse
+  end
   defp do_normalize(["--" <> option | rest], acc) do
     do_normalize(rest, [{:option, option} | acc])
   end
