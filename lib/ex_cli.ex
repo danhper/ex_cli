@@ -9,9 +9,8 @@ defmodule ExCLI do
   @spec process(atom, [String.t], Keyword.t) :: :ok | {:error, any}
   def process(module, args \\ System.argv, options \\ []) do
     app = module.__app__
-    IO.inspect(app)
-    IO.inspect(args)
-    IO.inspect(options)
+    result = ExCLI.Parser.parse(app, args, options)
+    IO.inspect(result)
     :ok
   end
 end

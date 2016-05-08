@@ -48,6 +48,7 @@ defmodule ExCLI.DSL do
   defmacro __using__(_opts) do
     quote do
       import ExCLI.DSL
+
       @app %ExCLI.App{
         name: ExCLI.App.default_name(__MODULE__)
       }
@@ -107,7 +108,7 @@ defmodule ExCLI.DSL do
   defmacro argument(name, options \\ []) do
     quote bind_quoted: [name: name, options: options] do
       if @command do
-        @command Map.put(@command, :arguments, [{name, options} | @command.arguments])
+        @command Map.put(@command, :arguments, [ExCLI.Argument.new(name, :arg, options) | @command.arguments])
       else
         raise "argument can only be used inside a command"
       end
@@ -134,9 +135,9 @@ defmodule ExCLI.DSL do
   defmacro option(name, options \\ []) do
     quote bind_quoted: [name: name, options: options] do
       if @command do
-        @command Map.put(@command, :options, [{name, options} | @command.options])
+        @command Map.put(@command, :options, [ExCLI.Argument.new(name, :option, options) | @command.options])
       else
-        @app Map.put(@app, :options, [{name, options} | @app.options])
+        @app Map.put(@app, :options, [ExCLI.Argument.new(name, :option, options) | @app.options])
       end
     end
   end

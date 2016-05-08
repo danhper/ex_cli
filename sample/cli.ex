@@ -19,10 +19,10 @@ defmodule MyApp.SampleCLI do
     option :from, help: "the sender of hello"
 
     run context do
-      if context.options[:verbose] >= 1 do
+      if context.verbose >= 1 do
         IO.puts("I am going to emit a greeting.")
       end
-      if from = context.options[:from] do
+      if from = context[:from] do
         IO.write("#{from} says: ")
       end
       IO.puts("Hello #{context.name}!")

@@ -2,18 +2,26 @@ defmodule ExCLI.Normalizer do
   @moduledoc false
 
   def normalize(args) do
-    do_normalize(args, [])
+    case do_normalize(args, []) do
+      {:error, _reason, _details} = err ->
+        err
+      result ->
+        {:ok, result}
+    end
   end
 
   defp do_normalize([], acc) do
     acc
     |> Enum.map(fn {type, value} ->
-      {type, String.to_atom(value)}
+      {type, normalize_name(value)}
     end)
     |> Enum.reverse
   end
   defp do_normalize(["--" <> option | rest], acc) do
     do_normalize(rest, [{:option, option} | acc])
+  end
+  defp do_normalize(["-" <> "" | rest], _acc) do
+    {:error, :empty_option, []}
   end
   defp do_normalize(["-" <> option | rest], acc) do
     options = String.split(option, "", trim: true)
@@ -23,5 +31,9 @@ defmodule ExCLI.Normalizer do
   end
   defp do_normalize([arg | rest], acc) do
     do_normalize(rest, [{:arg, arg} | acc])
+  end
+
+  defp normalize_name(name) do
+    name |> String.replace("-", "_") |> String.to_atom
   end
 end

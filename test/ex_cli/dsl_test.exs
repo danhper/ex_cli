@@ -4,6 +4,7 @@ defmodule ExCLI.DSLTest do
   import ExUnit.CaptureIO
 
   alias MyApp.SampleCLI
+  alias ExCLI.Argument
 
   test "creates an app object" do
     assert function_exported?(SampleCLI, :__app__, 0)
@@ -15,19 +16,17 @@ defmodule ExCLI.DSLTest do
 
   test "generate options" do
     app = SampleCLI.__app__
-    assert [{:verbose, verbose_args}] = app.options
-    assert verbose_args[:aliases] == [:v]
-    assert verbose_args[:count]
+    assert [%Argument{name: :verbose, aliases: [:v], count: true}] = app.options
   end
 
   test "generates commands" do
     app = SampleCLI.__app__
     assert [command] = app.commands
     assert command.name == :hello
-    assert [{option, option_args}] = command.options
+    assert [%Argument{name: name, help: help}] = command.options
     assert command.long_description == "Gives a nice a warm greeting to whoever would listen\n"
-    assert option == :from
-    assert option_args[:help] == "the sender of hello"
+    assert name == :from
+    assert help == "the sender of hello"
   end
 
   test "generates __run__ clauses" do
@@ -35,7 +34,7 @@ defmodule ExCLI.DSLTest do
       SampleCLI.__run__(:i_dont_exist, %{})
     end
     assert capture_io(fn ->
-      SampleCLI.__run__(:hello, %{name: "world", options: [from: "Daniel", verbose: 0]})
+      SampleCLI.__run__(:hello, %{name: "world", from: "Daniel", verbose: 0})
     end) == "Daniel says: Hello world!\n"
   end
 
