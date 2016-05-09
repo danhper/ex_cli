@@ -7,7 +7,20 @@ defmodule ExCLI.Command do
     name: atom,
     description: String.t,
     long_description: String.t,
-    arguments: [Keyword.t],
-    options: [Keyword.t],
+    arguments: [ExCLI.Argument.t],
+    options: [ExCLI.Argument.t]
   }
+
+  def add_argument(%__MODULE__{arguments: [%ExCLI.Argument{list: true} | _rest]}, _name, _options) do
+    raise ArgumentError, "cannot add an argument after a list argument"
+  end
+  def add_argument(%__MODULE__{arguments: args} = command, name, options) do
+    Map.put(command, :arguments, [ExCLI.Argument.new(name, :arg, options) | args])
+  end
+
+  def finalize(command) do
+    command
+    |> Map.put(:arguments, Enum.reverse(command.arguments))
+    |> Map.put(:options, Enum.reverse(command.options))
+  end
 end

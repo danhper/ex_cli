@@ -108,7 +108,7 @@ defmodule ExCLI.DSL do
   defmacro argument(name, options \\ []) do
     quote bind_quoted: [name: name, options: options] do
       if @command do
-        @command Map.put(@command, :arguments, [ExCLI.Argument.new(name, :arg, options) | @command.arguments])
+        @command ExCLI.Command.add_argument(@command, name, options)
       else
         raise "argument can only be used inside a command"
       end
@@ -180,20 +180,13 @@ defmodule ExCLI.DSL do
   end
 
   defmacro __before_compile__(_env) do
-    app_function = quote do
+    quote do
+      @app ExCLI.App.finalize(@app)
+
       @doc false
       def __app__ do
         @app
       end
-    end
-    fallback_run_clause = quote line: -1 do
-      def __run__(command, _context) do
-        raise ArgumentError, "command #{command} does not exist"
-      end
-    end
-    quote do
-      unquote(app_function)
-      unquote(fallback_run_clause)
     end
   end
 end

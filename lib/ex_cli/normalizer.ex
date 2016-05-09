@@ -12,8 +12,9 @@ defmodule ExCLI.Normalizer do
 
   defp do_normalize([], acc) do
     acc
-    |> Enum.map(fn {type, value} ->
-      {type, normalize_name(value)}
+    |> Enum.map(fn
+      {:option, value} -> {:option, normalize_name(value)}
+      arg -> arg
     end)
     |> Enum.reverse
   end

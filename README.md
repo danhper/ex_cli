@@ -1,6 +1,6 @@
 # ExCLI
 
-An Elixir toolkit for to create CLI applications.
+An Elixir library to create CLI applications.
 
 ## Roadmap
 

@@ -8,18 +8,18 @@ defmodule ExCLI.Argument do
     :help,
     :arg_type,
     :process,
+    list: false,
+    accumulate: false,
     type: :string,
     count: false,
     required: false,
-    aliases: [],
+    aliases: []
   ]
+
+  @type t :: %__MODULE__{}
 
   def key(arg) do
     arg.as || arg.name
-  end
-
-  def put_in_context(arg, context, value) do
-    Map.put(context, key(arg), value)
   end
 
   def new(name, arg_type, options \\ []) do

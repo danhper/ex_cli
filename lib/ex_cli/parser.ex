@@ -7,37 +7,57 @@ defmodule ExCLI.Parser do
     with {:ok, normalized} <- ExCLI.Normalizer.normalize(args),
          {command, global_options, command_args} <- extract_command(normalized),
          {:ok, command} <- find_command(app, command),
+         # FIXME: do this at compile time
          app_global_options = generate_options(app.options, opts),
-         context = generate_context(app.options),
-         {:ok, context} <- process_args(global_options, app_global_options, context) do
+         context = initialize_context(app.options),
+         {:ok, context} <- process_args(global_options, nil, app_global_options, context),
+         command_valid_options = generate_options(command.options, opts),
+         context = initialize_context(app.options ++ app.commands, context),
+         {:ok, context} <- process_args(command_args, command, command_valid_options, context) do
       context
     end
   end
 
-  defp process_args([], _valid_arguments, context), do: {:ok, context}
-  defp process_args([{type, name} | rest], valid_arguments, context) do
-    case Map.fetch(valid_arguments, name) do
-      {:ok, %Argument{arg_type: ^type} = arg} ->
-        do_process_args(arg, rest, valid_arguments, context)
-      _err ->
-        {:error, unknown(type), name: name}
+  # TODO: check if context is valid (command arguments should be empty or have list: true) and reverse lists
+  defp process_args([], _command,  _valid_options, context), do: {:ok, context}
+  defp process_args([{:option, name} | rest], command, valid_options, context) do
+    with {:ok, option} <- find_option(valid_options, name),
+         {:ok, new_context, args_rest} <- option.process.(option, context, rest) do
+      process_args(args_rest, command, valid_options, new_context)
+    end
+  end
+  defp process_args([{:arg, value} | rest], command, valid_options, context) do
+    with {:ok, arg, command} <- pop_argument(command, value),
+         {:ok, value} <- transform_value(value, arg.type),
+         new_context = put_value(context, arg, value) do
+      process_args(rest, command, valid_options, new_context)
     end
   end
 
-  defp unknown(key) do
-    String.to_atom("unknown_#{key}")
+  defp find_option(valid_options, name) do
+    case Map.fetch(valid_options, name) do
+      {:ok, %Argument{arg_type: :option}} = res ->
+        res
+      _err ->
+        {:error, :unknown_option, name: name}
+    end
   end
 
-  defp do_process_args(arg, args, valid_arguments, context) do
-    with {:ok, new_context, args_rest} <- arg.process.(arg, context, args) do
-      process_args(args_rest, valid_arguments, new_context)
+  defp pop_argument(command, value) do
+    case command.arguments do
+      [] ->
+        {:error, :too_many_args, value: value}
+      [%Argument{list: true} = arg] ->
+        {:ok, arg, command}
+      [%Argument{} = arg | rest] ->
+        {:ok, arg, Map.put(command, :arguments, rest)}
     end
   end
 
   defp extract_command(args) do
     case Enum.split_while(args, &match?({:option, _opt}, &1)) do
       {global_options, [{:arg, command} | command_args]} ->
-        {command, global_options, command_args}
+        {String.to_atom(command), global_options, command_args}
       {_options, []} ->
         {:error, :no_command, []}
     end
@@ -50,15 +70,13 @@ defmodule ExCLI.Parser do
     end
   end
 
-  defp generate_context(arguments, initial_context \\ %{}) do
+  defp initialize_context(arguments, initial_context \\ %{}) do
     Enum.reduce arguments, initial_context, fn
       (%Argument{default: default} = arg, context) when not is_nil(default) ->
         Map.put_new(context, Argument.key(arg), default)
       (%Argument{count: true} = arg, context) ->
         Map.put_new(context, Argument.key(arg), 0)
-      (%Argument{num: :infinity} = arg, context) ->
-        Map.put_new(context, Argument.key(arg), [])
-      (%Argument{num: n} = arg, context) when is_integer(n) and n > 1 ->
+      (%Argument{accumulate: true} = arg, context) ->
         Map.put_new(context, Argument.key(arg), [])
       (_arg, context) ->
         context
@@ -69,6 +87,7 @@ defmodule ExCLI.Parser do
     Enum.reduce raw_app_options, %{}, fn option, acc ->
       acc = add_boolean_negation_option(acc, option, opts)
       processor = make_processor(option)
+      # FIXME: no need to store process as an anonymous function
       processed_option = Map.put(option, :process, processor)
       acc = generate_aliases(acc, processed_option)
       put_option!(acc, option.name, processed_option)
@@ -106,8 +125,6 @@ defmodule ExCLI.Parser do
         &process_boolean/3
       option.count ->
         &process_count/3
-      is_integer(option.num) ->
-        &process_list/3
       true ->
         &process_value/3
     end
@@ -123,73 +140,32 @@ defmodule ExCLI.Parser do
     raise ArgumentError, "invalid processor #{processor}"
   end
 
-  defp process_list(option, context, args) do
-    acc = Map.get(context, Argument.key(option), [])
-    case do_process_list(option, args, acc) do
-      {:ok, result, args} ->
-        {:ok, Map.put(context, Argument.key(option), result), args}
-      {:error, _reason, _details} = err ->
-        err
-    end
+  defp process_value(arg, _context, []) do
+    {:error, :arg_missing, name: arg.name}
   end
-
-  defp do_process_list(option, args, acc) do
-    with {:ok, result, args} <- generate_list(option.num, args, acc),
-         {:ok, transformed_result} <- transform_list(option.type, result) do
-      {:ok, transformed_result, args}
-    end |>
-    case do
-      {:ok, _result, _args} = res ->
-        res
-      {:error, reason, details} ->
-        {:error, reason, [{:name, option.name} | details]}
-    end
-  end
-
-  defp generate_list(n, [], acc) when n == 0 or n == :infinity do
-    {:ok, acc, []}
-  end
-  defp generate_list(n, [], _acc) when is_integer(n) and n > 0 do
-    {:error, :not_enough_args, []}
-  end
-  defp generate_list(n, [{:option, _option} | _rest] = args, acc)
-    when n == 0 or n == :infinity do
-    {:ok, acc, args}
-  end
-  defp generate_list(0, [{:arg, _arg} | _rest], _acc) do
-    {:error, :too_many_args, []}
-  end
-  defp generate_list(:infinity, [{:arg, arg} | rest], acc) do
-    generate_list(:infinity, rest, [arg | acc])
-  end
-  defp generate_list(n, [{:arg, arg} | rest], acc) when is_integer(n) do
-    generate_list(n - 1, rest, [arg | acc])
-  end
-
-  defp transform_list(type, args), do: do_transform_list(type, args, [])
-  defp do_transform_list(_type, [], acc), do: {:ok, acc}
-  defp do_transform_list(type, [value | rest], acc) do
-    case transform_value(value, type) do
-      {:ok, transformed} -> do_transform_list(type, rest, [transformed | acc])
-      :error -> {:error, :bad_argument, type: type}
-    end
-  end
-
-  defp process_value(option, _context, []) do
-    {:error, :arg_missing, name: option.name}
-  end
-  defp process_value(option, context, [value | rest]) do
-    case transform_value(value, option.type) do
+  defp process_value(arg, context, [value | rest]) do
+    case transform_value(value, arg.type) do
       {:ok, transformed} ->
-        {:ok, Map.put(context, Argument.key(option), transformed), rest}
+        {:ok, put_value(context, arg, transformed), rest}
       :error ->
-        {:error, :bad_argument, name: option.name, type: option.type}
+        {:error, :bad_argument, name: arg.name, type: arg.type}
     end
   end
 
-  defp transform_value(value, :string), do: value
+  defp put_value(context, arg, value) do
+    key = Argument.key(arg)
+    if arg.accumulate or arg.list do
+      Map.put(context, key, [value | Map.fetch!(context,key)])
+    else
+      Map.put(context, key, value)
+    end
+  end
+
+  defp transform_value("yes", :boolean), do: {:ok, true}
+  defp transform_value("no", :boolean), do: {:ok, false}
+  defp transform_value(value, :string), do: {:ok, value}
   defp transform_value(value, :integer), do: transform_num(value, Integer)
-  defp transform_value(value, :float), do: transform_num(value, Flaot)
+  defp transform_value(value, :float), do: transform_num(value, Float)
   defp transform_value(_value, type) do
     raise ArgumentError, "invalid type #{type}"
   end

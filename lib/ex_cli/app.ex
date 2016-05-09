@@ -19,4 +19,11 @@ defmodule ExCLI.App do
     |> List.last
     |> Macro.underscore
   end
+
+  @doc false
+  def finalize(app) do
+    app
+    |> Map.put(:options, Enum.reverse(app.options))
+    |> Map.put(:commands, Enum.map(app.commands, &ExCLI.Command.finalize(&1)))
+  end
 end

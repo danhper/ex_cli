@@ -1,8 +1,6 @@
 defmodule ExCLI.DSLTest do
   use ExUnit.Case
 
-  import ExUnit.CaptureIO
-
   alias MyApp.SampleCLI
   alias ExCLI.Argument
 
@@ -29,17 +27,23 @@ defmodule ExCLI.DSLTest do
     assert help == "the sender of hello"
   end
 
-  test "generates __run__ clauses" do
-    assert_raise ArgumentError, "command i_dont_exist does not exist", fn ->
-      SampleCLI.__run__(:i_dont_exist, %{})
-    end
-    assert capture_io(fn ->
-      SampleCLI.__run__(:hello, %{name: "world", from: "Daniel", verbose: 0})
-    end) == "Daniel says: Hello world!\n"
-  end
-
   test "generates a default name" do
     defmodule MyUnnamedCLI, do: use ExCLI.DSL
     assert MyUnnamedCLI.__app__.name == "my_unnamed_cli"
+  end
+
+  test "only allow a single list argument per command" do
+    bad_module = quote do
+      defmodule BadCLI do
+        use ExCLI.DSL
+        command :foo do
+          argument :abc, list: true
+          argument :def, list: true
+        end
+      end
+    end
+    assert_raise ArgumentError, "cannot add an argument after a list argument", fn ->
+      Code.eval_quoted(bad_module)
+    end
   end
 end
