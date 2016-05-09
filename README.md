@@ -1,15 +1,23 @@
 # ExCLI
 
-A CLI toolkit for Elixir.
+An Elixir toolkit for to create CLI applications.
+
+## Roadmap
+
+  - [ ] Command parser
+  - [ ] Usage generation
+  - [ ] Help command
+  - [ ] Man page generation
 
 ## Installation
 
+Add ex_cli to your list of dependencies in `mix.exs`:
 
-  Add ex_cli to your list of dependencies in `mix.exs`:
-
-        def deps do
-          [{:ex_cli, "~> 0.0.1"}]
-        end
+```elixir
+def deps do
+  [{:ex_cli, "~> 0.0.1"}]
+end
+```
 
 ## Usage
 
