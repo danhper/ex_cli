@@ -4,7 +4,7 @@ An Elixir library to create CLI applications.
 
 ## Roadmap
 
-  - [ ] Command parser
+  - [x] Command parser
   - [ ] Usage generation
   - [ ] Help command
   - [ ] Man page generation

@@ -1,4 +1,6 @@
 defmodule ExCLI.Util do
+  @moduledoc false
+
   def generate_options(raw_options, opts) do
     Enum.reduce raw_options, %{}, fn option, acc ->
       acc

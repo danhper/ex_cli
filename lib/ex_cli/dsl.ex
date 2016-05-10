@@ -45,6 +45,7 @@ defmodule ExCLI.DSL do
   ```
   """
 
+  @doc false
   defmacro __using__(opts) do
     quote do
       import ExCLI.DSL
@@ -100,10 +101,11 @@ defmodule ExCLI.DSL do
     * `type`    - The type of the argument. Can be one of the following
       * `:integer` - Will be parsed as an integer
       * `:float`   - Will be parsed as a float
-    * `metavar` - The name of the variable displayed in the usage
-    * `default` - The default value for the argument
-    * `num`     - The number of arguments that can be passed. Default to `1`. Can be an integer, a range, or `:infinity`. If the number of arguments that can be passed is greater than 1, the argument will be available as a list inside the context.
-    * `:as`     - The key of the argument in the context
+    * `:metavar` - The name of the variable displayed in the usage
+    * `:default` - The default value for the argument
+    * `:list`    - When true, the argument will accept multiple values.
+                   This should be the last argument.
+    * `:as`      - The key of the argument in the context
   """
   @spec argument(atom, Keyword.t) :: any
   defmacro argument(name, options \\ []) do
@@ -124,10 +126,11 @@ defmodule ExCLI.DSL do
 
   ## Options
 
-  Accepts the same options as `argument`, as well as:
+  Accepts the same options as `argument` except for `:list` and `:default`, as well as:
 
-    * `required` - The command will fail if this option is not passed
-    * `aliases`  - A list of aliases (atoms) for the option
+    * `:required`   - The command will fail if this option is not passed
+    * `:aliases`    - A list of aliases (atoms) for the option
+    * `:accumulate` - Will accumulate the options in a list
 
   The `type` option also accepts `boolean`, which will not consume the next argument
   except if it is `yes` or `no`. Will also accept `--no-OPTION` to negate the option.

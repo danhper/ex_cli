@@ -167,7 +167,7 @@ defmodule ExCLI.Parser do
 
   defp validate_options([], _context), do: :ok
   defp validate_options([option | rest], context) do
-    if option.required and not Map.has_key?(context, option.name) do
+    if option.required and not Map.has_key?(context, Argument.key(option)) do
       {:error, :option_missing, name: option.name}
     else
       validate_options(rest, context)

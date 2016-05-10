@@ -1,4 +1,6 @@
 defmodule ExCLI.Argument do
+  @moduledoc false
+
   defstruct [
     :name,
     :metavar,
