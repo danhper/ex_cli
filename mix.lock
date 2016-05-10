@@ -1,4 +1,13 @@
-%{"earmark": {:hex, :earmark, "0.2.1"},
+%{"certifi": {:hex, :certifi, "0.4.0"},
+  "earmark": {:hex, :earmark, "0.2.1"},
   "ex_doc": {:hex, :ex_doc, "0.11.5"},
+  "excoveralls": {:hex, :excoveralls, "0.5.4"},
+  "exjsx": {:hex, :exjsx, "3.2.0"},
   "fs": {:hex, :fs, "0.9.2"},
-  "mix_test_watch": {:hex, :mix_test_watch, "0.2.6"}}
+  "hackney": {:hex, :hackney, "1.6.0"},
+  "idna": {:hex, :idna, "1.2.0"},
+  "jsx": {:hex, :jsx, "2.6.2"},
+  "metrics": {:hex, :metrics, "1.0.1"},
+  "mimerl": {:hex, :mimerl, "1.0.2"},
+  "mix_test_watch": {:hex, :mix_test_watch, "0.2.6"},
+  "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.0"}}

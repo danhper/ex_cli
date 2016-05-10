@@ -1,6 +1,6 @@
 # ExCLI
 
-An Elixir library to create CLI applications.
+Elixir library to build CLI applications.
 
 ## Installation
 
@@ -85,3 +85,5 @@ When all this is done, the last part will to generate documentation in man page 
 ## Contributing
 
 Contributions are very welcome, feel free to open an issue or a PR.
+
+I am also looking for a better name, ideas are welcome!
