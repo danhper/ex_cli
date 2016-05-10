@@ -3,29 +3,31 @@ defmodule ExCLI.Parser do
 
   alias ExCLI.Argument
 
-  def parse(app, args, opts \\ []) do
-    with {:ok, normalized} <- ExCLI.Normalizer.normalize(args),
-         {command, global_options, command_args} <- extract_command(normalized),
-         {:ok, command} <- find_command(app, command),
-         # FIXME: do this at compile time
-         app_global_options = generate_options(app.options, opts),
+  def parse(app, args, _opts \\ []) do
+    with {:ok, args} <- ExCLI.Normalizer.normalize(args),
          context = initialize_context(app.options),
-         {:ok, context} <- process_args(global_options, nil, app_global_options, context),
-         command_valid_options = generate_options(command.options, opts),
-         context = initialize_context(app.options ++ app.commands, context),
-         {:ok, context} <- process_args(command_args, command, command_valid_options, context) do
-      context
+         {:ok, args, context} <- process_args(args, nil, app.normalized_options, context),
+         {command_name, args} <- extract_command(args),
+         {:ok, command} <- find_command(app, command_name),
+         context = initialize_context(command.arguments ++ command.options, context),
+         {:ok, [], context} <- process_args(args, command, command.normalized_options, context),
+         :ok <- validate_context(app, command, context) do
+      {:ok, command.name, finalize_context(context)}
     end
   end
 
-  # TODO: check if context is valid (command arguments should be empty or have list: true) and reverse lists
-  defp process_args([], _command,  _valid_options, context), do: {:ok, context}
+  defp process_args([],
+        %ExCLI.Command{arguments: [%Argument{list: false} = arg | _rest]}, _valid_options, _context) do
+    {:error, :arg_missing, name: arg.name}
+  end
+  defp process_args([], _command, _valid_options, context), do: {:ok, [], context}
   defp process_args([{:option, name} | rest], command, valid_options, context) do
     with {:ok, option} <- find_option(valid_options, name),
-         {:ok, new_context, args_rest} <- option.process.(option, context, rest) do
+         {:ok, new_context, args_rest} <- process_option(option, context, rest) do
       process_args(args_rest, command, valid_options, new_context)
     end
   end
+  defp process_args([{:arg, _arg} | _rest] = args, nil, _valid_options, context), do: {:ok, args, context}
   defp process_args([{:arg, value} | rest], command, valid_options, context) do
     with {:ok, arg, command} <- pop_argument(command, value),
          {:ok, value} <- transform_value(value, arg.type),
@@ -54,14 +56,8 @@ defmodule ExCLI.Parser do
     end
   end
 
-  defp extract_command(args) do
-    case Enum.split_while(args, &match?({:option, _opt}, &1)) do
-      {global_options, [{:arg, command} | command_args]} ->
-        {String.to_atom(command), global_options, command_args}
-      {_options, []} ->
-        {:error, :no_command, []}
-    end
-  end
+  defp extract_command([]), do: {:error, :no_command, []}
+  defp extract_command([{:arg, command} | rest]), do: {String.to_atom(command), rest}
 
   defp find_command(app, command_name) do
     case Enum.find(app.commands, &(&1.name == command_name)) do
@@ -78,72 +74,43 @@ defmodule ExCLI.Parser do
         Map.put_new(context, Argument.key(arg), 0)
       (%Argument{accumulate: true} = arg, context) ->
         Map.put_new(context, Argument.key(arg), [])
+      (%Argument{list: true} = arg, context) ->
+        Map.put_new(context, Argument.key(arg), [])
       (_arg, context) ->
         context
     end
   end
 
-  defp generate_options(raw_app_options, opts) do
-    Enum.reduce raw_app_options, %{}, fn option, acc ->
-      acc = add_boolean_negation_option(acc, option, opts)
-      processor = make_processor(option)
-      # FIXME: no need to store process as an anonymous function
-      processed_option = Map.put(option, :process, processor)
-      acc = generate_aliases(acc, processed_option)
-      put_option!(acc, option.name, processed_option)
-    end
-  end
-
-  defp generate_aliases(app_options, option) do
-    Enum.reduce option.aliases, app_options, fn(name, options) ->
-      put_option!(options, name, option)
-    end
-  end
-
-  defp put_option!(app_options, name, option) do
-    if Map.has_key?(app_options, name) do
-      raise ArgumentError, "duplicated key #{name}"
-    else
-      Map.put(app_options, name, option)
-    end
-  end
-
-  defp add_boolean_negation_option(options, option, opts) do
-    if option.type == :boolean and !opts[:no_boolean_negation] do
-      key = String.to_atom("no_#{option.name}")
-      Map.put(options, key, Map.put(option, :process, make_const_processor(false)))
-    else
-      options
-    end
-  end
-
-  defp make_processor(option) do
+  defp process_option(option, context, args) do
     cond do
       option.process ->
-        normalize_processor(option[:process])
+        call_processor(option, context, args)
       option.type == :boolean ->
-        &process_boolean/3
+        process_boolean(option, context, args)
       option.count ->
-        &process_count/3
+        process_count(option, context, args)
       true ->
-        &process_value/3
+        process_value(option, context, args)
     end
   end
 
-  defp normalize_processor({:const, value}) do
-    make_const_processor(value)
+  defp call_processor(%Argument{process: {:const, value}} = option, context, args) do
+    {:ok, Map.put(context, Argument.key(option), value), args}
   end
-  defp normalize_processor(processor) when is_function(processor, 3) do
-    processor
+  defp call_processor(%Argument{process: processor} = option, context, args) when is_function(processor, 3) do
+    processor.(option, context, args)
   end
-  defp normalize_processor(processor) do
+  defp call_processor(%Argument{process: processor}, _, _) do
     raise ArgumentError, "invalid processor #{processor}"
   end
 
   defp process_value(arg, _context, []) do
-    {:error, :arg_missing, name: arg.name}
+    {:error, :option_arg_missing, name: arg.name}
   end
-  defp process_value(arg, context, [value | rest]) do
+  defp process_value(arg, _context, [{:option, _option} | _rest]) do
+    {:error, :option_arg_missing, name: arg.name}
+  end
+  defp process_value(arg, context, [{:arg, value} | rest]) do
     case transform_value(value, arg.type) do
       {:ok, transformed} ->
         {:ok, put_value(context, arg, transformed), rest}
@@ -155,7 +122,7 @@ defmodule ExCLI.Parser do
   defp put_value(context, arg, value) do
     key = Argument.key(arg)
     if arg.accumulate or arg.list do
-      Map.put(context, key, [value | Map.fetch!(context,key)])
+      Map.put(context, key, [value | Map.fetch!(context, key)])
     else
       Map.put(context, key, value)
     end
@@ -192,9 +159,27 @@ defmodule ExCLI.Parser do
     {:ok, Map.put_new(context, Argument.key(option), true), args}
   end
 
-  def make_const_processor(value) do
-    fn option, context, args ->
-      {:ok, Map.put(context, Argument.key(option), value), args}
+  defp validate_context(app, command, context) do
+    with :ok <- validate_options(app.options, context) do
+      validate_options(command.options, context)
     end
+  end
+
+  defp validate_options([], _context), do: :ok
+  defp validate_options([option | rest], context) do
+    if option.required and not Map.has_key?(context, option.name) do
+      {:error, :option_missing, name: option.name}
+    else
+      validate_options(rest, context)
+    end
+  end
+
+  defp finalize_context(context) do
+    context
+    |> Enum.map(fn
+        {k, v} when is_list(v) -> {k, Enum.reverse(v)}
+        kv -> kv
+      end)
+    |> Enum.into(%{})
   end
 end

@@ -45,12 +45,13 @@ defmodule ExCLI.DSL do
   ```
   """
 
-  defmacro __using__(_opts) do
+  defmacro __using__(opts) do
     quote do
       import ExCLI.DSL
 
       @app %ExCLI.App{
-        name: ExCLI.App.default_name(__MODULE__)
+        name: ExCLI.App.default_name(__MODULE__),
+        opts: unquote(opts)
       }
       @before_compile unquote(__MODULE__)
       @command nil

@@ -18,11 +18,11 @@ defmodule ExCLI.Normalizer do
     end)
     |> Enum.reverse
   end
+  defp do_normalize(["-" | _rest], _acc) do
+    {:error, :empty_option, []}
+  end
   defp do_normalize(["--" <> option | rest], acc) do
     do_normalize(rest, [{:option, option} | acc])
-  end
-  defp do_normalize(["-" <> "" | rest], _acc) do
-    {:error, :empty_option, []}
   end
   defp do_normalize(["-" <> option | rest], acc) do
     options = String.split(option, "", trim: true)

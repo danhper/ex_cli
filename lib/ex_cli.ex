@@ -4,13 +4,25 @@ defmodule ExCLI do
   """
 
   @doc """
-  Process the arguments using the given module, which should be using `ExCLI.DSL`
+  Parse the arguments using the given module, which should be using `ExCLI.DSL`
   """
-  @spec process(atom, [String.t], Keyword.t) :: :ok | {:error, any}
-  def process(module, args \\ System.argv, options \\ []) do
+  @spec parse(atom, [String.t], Keyword.t) :: {:ok, atom, map} | {:error, atom, Keyword.t}
+  def parse(module, args \\ System.argv, options \\ []) do
     app = module.__app__
-    result = ExCLI.Parser.parse(app, args, options)
-    IO.inspect(result)
-    :ok
+    ExCLI.Parser.parse(app, args, options)
+  end
+
+
+  @doc """
+  Parse and run the arguments using the given module, which should be using `ExCLI.DSL`
+  """
+  @spec process(atom, [String.t], Keyword.t) :: :ok | {:error, atom, Keyword.t}
+  def process(module, args \\ System.argv, options \\ []) do
+    case parse(module, args, options) do
+      {:ok, command, context} ->
+        module.__run__(command, context)
+      {:error, _reason, _details} = err ->
+        err
+    end
   end
 end
