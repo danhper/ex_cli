@@ -1,5 +1,9 @@
 # ExCLI
 
+[![Build Status](https://travis-ci.org/tuvistavie/ex_cli.svg?branch=master)](https://travis-ci.org/tuvistavie/ex_cli)
+[![Coverage Status](https://coveralls.io/repos/github/tuvistavie/ex_cli/badge.svg?branch=master)](https://coveralls.io/github/tuvistavie/ex_cli?branch=master)
+
+
 Elixir library to build CLI applications.
 
 ## Installation
