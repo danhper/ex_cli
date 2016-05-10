@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/tuvistavie/ex_cli.svg?branch=master)](https://travis-ci.org/tuvistavie/ex_cli)
 [![Coverage Status](https://coveralls.io/repos/github/tuvistavie/ex_cli/badge.svg?branch=master)](https://coveralls.io/github/tuvistavie/ex_cli?branch=master)
-
+[![Hex.pm](https://img.shields.io/hexpm/v/ex_cli.svg?maxAge=2592000)](https://hex.pm/packages/ex_cli)
 
 Elixir library to build CLI applications.
 
@@ -64,6 +64,10 @@ Which can be used in the following way.
 sample_cli hello -vv world --from me
 ```
 
+## Documentation
+
+Check out the [documentation][1] for more information.
+
 ## Roadmap
 
   * [x] Command parser
@@ -91,3 +95,5 @@ When all this is done, the last part will to generate documentation in man page 
 Contributions are very welcome, feel free to open an issue or a PR.
 
 I am also looking for a better name, ideas are welcome!
+
+[1]: https://hexdocs.pm/ex_cli/api-reference.html
