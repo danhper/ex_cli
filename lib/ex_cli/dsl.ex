@@ -32,10 +32,10 @@ defmodule ExCLI.DSL do
       option :from, help: "the sender of hello"
 
       run context do
-        if context.options[:verbose] >= 1 do
+        if context.verbose >= 1 do
           IO.puts("I am going to emit a greeting.")
         end
-        if from = context.options[:from] do
+        if from = context[:from] do
           IO.write("\#{from} says: ")
         end
         IO.puts("Hello \#{context.name}!")
@@ -101,11 +101,11 @@ defmodule ExCLI.DSL do
     * `type`    - The type of the argument. Can be one of the following
       * `:integer` - Will be parsed as an integer
       * `:float`   - Will be parsed as a float
-    * `:metavar` - The name of the variable displayed in the usage
+      * `:boolean` - Will be parsed as a boolean (should be `"yes"` or `"no"`)
+    * `:list`    - When true, the argument will accept multiple values and should be the last argument of the command
     * `:default` - The default value for the argument
-    * `:list`    - When true, the argument will accept multiple values.
-                   This should be the last argument.
     * `:as`      - The key of the argument in the context
+
   """
   @spec argument(atom, Keyword.t) :: any
   defmacro argument(name, options \\ []) do
@@ -131,9 +131,25 @@ defmodule ExCLI.DSL do
     * `:required`   - The command will fail if this option is not passed
     * `:aliases`    - A list of aliases (atoms) for the option
     * `:accumulate` - Will accumulate the options in a list
+    * `:type`       - The type of the argument. See `argument/2` type documentation for available types.
 
-  The `type` option also accepts `boolean`, which will not consume the next argument
-  except if it is `yes` or `no`. Will also accept `--no-OPTION` to negate the option.
+      When the `type` option is `:boolean`, it will not consume the next argument
+      except if it is `yes` or `no`. It will also accept `--no-OPTION` to negate the option.
+    * `:default`    - The default value for the argument
+    * `:as`         - The key of the argument in the context
+    * `:process`    - A function to process the option, or an alias to an existing function.
+
+      The following aliases are available
+
+        * `{:const, value}` - Will store the value in the context
+
+      When `:process` is a function, it must have the following signature
+
+          process(arg :: ExCLI.Argument.t, context :: map, args :: [String.t]) :: {:ok, map, [String.t]} | {:error, atom, Keyword.t}
+
+      where `arg` is the current argument (or option), `context` is a map with all the current parsed values and `args` are the current parsed arguments.
+
+      The function should return either `{:ok, context, args}` with `context` and `args` updated on success, or `{:error, reason, details}` on failure.
   """
   @spec option(atom, Keyword.t) :: any
   defmacro option(name, options \\ []) do
@@ -150,8 +166,8 @@ defmodule ExCLI.DSL do
   Defines the block to run when executing the command.
 
   The first argument is the context: a map containing the parsed argument, which will
-  be accessible within the block. The map will have all the argument keys as well
-  as the `:options` key containing the parsed options.
+  be accessible within the block. The map will have all the argument and option keys
+  with the parsed values. It will not contain options without default if they were not given.
 
   See this module example for a sample usage.
   """

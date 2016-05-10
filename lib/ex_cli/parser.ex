@@ -3,21 +3,19 @@ defmodule ExCLI.Parser do
 
   alias ExCLI.Argument
 
-  def parse(app, args, _opts \\ []) do
+  def parse(app, args) do
     with {:ok, args} <- ExCLI.Normalizer.normalize(args),
-         context = initialize_context(app.options),
-         {:ok, args, context} <- process_args(args, nil, app.normalized_options, context),
+         {:ok, args, context} <- process_args(args, nil, app.normalized_options, %{}),
          {command_name, args} <- extract_command(args),
          {:ok, command} <- find_command(app, command_name),
-         context = initialize_context(command.arguments ++ command.options, context),
          {:ok, [], context} <- process_args(args, command, command.normalized_options, context),
+         context = add_defaults(context, app.options ++ command.arguments ++ command.options),
          :ok <- validate_context(app, command, context) do
       {:ok, command.name, finalize_context(context)}
     end
   end
 
-  defp process_args([],
-        %ExCLI.Command{arguments: [%Argument{list: false} = arg | _rest]}, _valid_options, _context) do
+  defp process_args([], %ExCLI.Command{arguments: [%Argument{list: false, default: nil} = arg | _rest]}, _valid_options, _context) do
     {:error, :arg_missing, name: arg.name}
   end
   defp process_args([], _command, _valid_options, context), do: {:ok, [], context}
@@ -30,7 +28,7 @@ defmodule ExCLI.Parser do
   defp process_args([{:arg, _arg} | _rest] = args, nil, _valid_options, context), do: {:ok, args, context}
   defp process_args([{:arg, value} | rest], command, valid_options, context) do
     with {:ok, arg, command} <- pop_argument(command, value),
-         {:ok, value} <- transform_value(value, arg.type),
+         {:ok, value} <- transform_arg_value(arg, value),
          new_context = put_value(context, arg, value) do
       process_args(rest, command, valid_options, new_context)
     end
@@ -61,13 +59,13 @@ defmodule ExCLI.Parser do
 
   defp find_command(app, command_name) do
     case Enum.find(app.commands, &(&1.name == command_name)) do
-      nil -> {:error, :command_not_found, name: command_name}
+      nil -> {:error, :unknown_command, name: command_name}
       command -> {:ok, command}
     end
   end
 
-  defp initialize_context(arguments, initial_context \\ %{}) do
-    Enum.reduce arguments, initial_context, fn
+  defp add_defaults(context, arguments) do
+    Enum.reduce arguments, context, fn
       (%Argument{default: default} = arg, context) when not is_nil(default) ->
         Map.put_new(context, Argument.key(arg), default)
       (%Argument{count: true} = arg, context) ->
@@ -101,7 +99,7 @@ defmodule ExCLI.Parser do
     processor.(option, context, args)
   end
   defp call_processor(%Argument{process: processor}, _, _) do
-    raise ArgumentError, "invalid processor #{processor}"
+    raise ArgumentError, "invalid processor #{inspect(processor)}"
   end
 
   defp process_value(arg, _context, []) do
@@ -111,30 +109,37 @@ defmodule ExCLI.Parser do
     {:error, :option_arg_missing, name: arg.name}
   end
   defp process_value(arg, context, [{:arg, value} | rest]) do
-    case transform_value(value, arg.type) do
-      {:ok, transformed} ->
-        {:ok, put_value(context, arg, transformed), rest}
-      :error ->
-        {:error, :bad_argument, name: arg.name, type: arg.type}
+    with {:ok, transformed} <- transform_arg_value(arg, value) do
+      {:ok, put_value(context, arg, transformed), rest}
     end
   end
 
   defp put_value(context, arg, value) do
     key = Argument.key(arg)
     if arg.accumulate or arg.list do
-      Map.put(context, key, [value | Map.fetch!(context, key)])
+      Map.put(context, key, [value | Map.get(context, key, [])])
     else
       Map.put(context, key, value)
     end
   end
 
+  defp transform_arg_value(arg, value) do
+    case transform_value(value, arg.type) do
+      {:ok, _transformed} = res ->
+        res
+      :error ->
+        {:error, :bad_argument, name: arg.name, type: arg.type}
+    end
+  end
+
   defp transform_value("yes", :boolean), do: {:ok, true}
   defp transform_value("no", :boolean), do: {:ok, false}
+  defp transform_value(_, :boolean), do: :error
   defp transform_value(value, :string), do: {:ok, value}
   defp transform_value(value, :integer), do: transform_num(value, Integer)
   defp transform_value(value, :float), do: transform_num(value, Float)
   defp transform_value(_value, type) do
-    raise ArgumentError, "invalid type #{type}"
+    raise ArgumentError, "invalid type #{inspect(type)}"
   end
 
   defp transform_num(value, mod) do

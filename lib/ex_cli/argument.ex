@@ -3,7 +3,6 @@ defmodule ExCLI.Argument do
 
   defstruct [
     :name,
-    :metavar,
     :as,
     :default,
     :num,
