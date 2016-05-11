@@ -3,6 +3,11 @@ defmodule ExCLI.NormalizerTest do
 
   alias ExCLI.Normalizer
 
+  test "normalize error" do
+    assert Normalizer.normalize(["-", "bar"]) == {:error, :empty_option, []}
+    assert Normalizer.normalize(["--", "bar"]) == {:error, :empty_option, []}
+  end
+
   test "normalize args" do
     assert Normalizer.normalize(["foo", "bar"]) == {:ok, [arg: "foo", arg: "bar"]}
   end

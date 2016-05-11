@@ -20,7 +20,7 @@ defmodule MyApp.SampleCLI do
 
     run context do
       if context.verbose >= 1 do
-        IO.puts("I am going to emit a greeting.")
+        IO.puts("Running hello command.")
       end
       if from = context[:from] do
         IO.write("#{from} says: ")

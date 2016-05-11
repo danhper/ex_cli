@@ -13,6 +13,8 @@ defmodule ExCLI.ParserTest do
     assert Parser.parse(app(:hello, [foo: [type: :integer]]), ["hello", "a"]) == {:error, :bad_argument, [name: :foo, type: :integer]}
     assert Parser.parse(app(:hello, [], [foo: [type: :integer]]), ["hello", "--foo", "a"]) == {:error, :bad_argument, [name: :foo, type: :integer]}
     assert Parser.parse(app(:hello, [foo: [type: :boolean]]), ["hello", "a"]) == {:error, :bad_argument, [name: :foo, type: :boolean]}
+    assert Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo"]) == {:error, :option_arg_missing, [name: :foo]}
+    assert Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo", "--bar"]) == {:error, :option_arg_missing, [name: :foo]}
   end
 
   test "basic inputs" do
@@ -46,6 +48,9 @@ defmodule ExCLI.ParserTest do
     assert Parser.parse(app(:hello, [foo: [type: :float]]), ["hello", "1.4"]) == {:ok, :hello, %{foo: 1.4}}
     assert Parser.parse(app(:hello, [foo: [type: :integer, list: true]]), ["hello", "1", "2", "3"]) == {:ok, :hello, %{foo: [1, 2, 3]}}
     assert Parser.parse(app(:hello, [], [foo: [type: :float, accumulate: true]]), ["hello", "--foo", "1.1", "--foo", "2.2"]) == {:ok, :hello, %{foo: [1.1, 2.2]}}
+    assert_raise ArgumentError, ~r/invalid type/, fn ->
+      Parser.parse(app(:hello, [], [foo: [type: :foo]]), ["hello", "--foo", "bar"])
+    end
   end
 
   test "boolean options" do
@@ -80,6 +85,10 @@ defmodule ExCLI.ParserTest do
     assert Parser.parse(app(:hello, [], [foo: [process: {:const, "bar"}]]), ["hello", "--foo"]) == {:ok, :hello, %{foo: "bar"}}
     f = fn _arg, context, args -> {:ok, Map.put(context, :foo, "bar"), args} end
     assert Parser.parse(app(:hello, [], [foo: [process: f]]), ["hello", "--foo"]) == {:ok, :hello, %{foo: "bar"}}
+    assert_raise ArgumentError, ~r/invalid processor/, fn ->
+      f = fn -> "foo" end
+      Parser.parse(app(:hello, [], [foo: [process: f]]), ["hello", "--foo"])
+    end
   end
 
   defp app(command, command_arguments \\ [], command_options \\ [], app_options \\ []) do

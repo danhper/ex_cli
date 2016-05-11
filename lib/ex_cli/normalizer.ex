@@ -18,9 +18,8 @@ defmodule ExCLI.Normalizer do
     end)
     |> Enum.reverse
   end
-  defp do_normalize(["-" | _rest], _acc) do
-    {:error, :empty_option, []}
-  end
+  defp do_normalize(["-" | _rest], _acc), do: {:error, :empty_option, []}
+  defp do_normalize(["--" | _rest], _acc), do: {:error, :empty_option, []}
   defp do_normalize(["--" <> option | rest], acc) do
     do_normalize(rest, [{:option, option} | acc])
   end

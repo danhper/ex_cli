@@ -71,24 +71,28 @@ Check out the [documentation][1] for more information.
 ## Roadmap
 
   * [x] Command parser
+
+    The command parser is now working and should be enough for a good number of tasks.
+
   * [ ] Usage generation
+
+    The next step is to get a pretty usage that can be shown to the user.
+
   * [ ] Help command
+
+    Then the goal will be to add a `help` command which can be used as `app help command` to show help about `command`.
+
   * [ ] Command parser improvements
+
+    When the usage and help parts are done, there are a few improvements that will be nice to have in the command parser:
+
+      * the ability to set a default command
+      * the ability to easily delegate a command to another module
+      * fuzzy handling of command (i.e. `npm insta` will run `npm install`)
+
   * [ ] Man page generation
 
-The command parser is now working and should be enough for a good number of tasks.
-
-The next step is to get a pretty usage that can be shown to the user.
-
-Then the goal will be to add a `help` command which can be used as `app help command` to show help about `command`.
-
-When the usage and help parts are done, there are a few improvements that will be nice to have in the command parser:
-
-  * the ability to set a default command
-  * the ability to easily delegate a command to another module
-  * fuzzy handling of command (i.e. `npm insta` will run `npm install`)
-
-When all this is done, the last part will to generate documentation in man page and markdown formats, which will probably be done as a mix task.
+    When all this is done, the last part will to generate documentation in man page and markdown formats, which will probably be done as a mix task.
 
 ## Contributing
 
