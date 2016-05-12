@@ -32,4 +32,26 @@ defmodule ExCLI.Util do
       options
     end
   end
+
+  def pretty_join(strings, opts \\ []) do
+    if width = Keyword.get(opts, :width, 80) do
+      do_pretty_join(strings, width, [""], opts)
+    else
+      Enum.join(strings)
+    end
+  end
+  defp do_pretty_join([], _width, acc, opts) do
+    padding = String.duplicate(" ", Keyword.get(opts, :padding, 0))
+    acc |> Enum.reverse |> Enum.join("\n#{padding}")
+  end
+  defp do_pretty_join([head | rest], width, [current | others], opts)
+      when byte_size(head) + byte_size(current) < width do
+    current = current <> separator(current) <> head
+    do_pretty_join(rest, width, [current | others], opts)
+  end
+  defp do_pretty_join([head | rest], width, [current | others], opts) do
+    do_pretty_join(rest, width, [head, current | others], opts)
+  end
+  defp separator(""), do: ""
+  defp separator(_), do: " "
 end

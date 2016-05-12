@@ -103,8 +103,9 @@ defmodule ExCLI.DSL do
       * `:float`   - Will be parsed as a float
       * `:boolean` - Will be parsed as a boolean (should be `"yes"` or `"no"`)
     * `:list`    - When true, the argument will accept multiple values and should be the last argument of the command
-    * `:default` - The default value for the argument
-    * `:as`      - The key of the argument in the context
+    * `:default` - The default value for the option
+    * `:as`      - The key of the option in the context
+    * `:metavar` - The name of the option argument displayed in the help
 
   """
   @spec argument(atom, Keyword.t) :: any
