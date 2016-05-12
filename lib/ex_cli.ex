@@ -43,6 +43,18 @@ defmodule ExCLI do
     end
   end
 
+  @spec run!(atom, [String.t]) :: any
+  def run!(module, args \\ System.argv) do
+    case parse(module, args) do
+      {:ok, command, context} ->
+        module.__run__(command, context)
+      {:error, reason, details} ->
+        IO.puts(ExCLI.Formatter.Error.format(reason, details))
+        IO.puts(usage(module))
+        System.halt(1)
+    end
+  end
+
   @doc """
   Displays the usage for the given module
   """

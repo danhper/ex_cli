@@ -47,15 +47,25 @@ defmodule ExCLI.DSL do
 
   @doc false
   defmacro __using__(opts) do
-    quote do
+    quote bind_quoted: [opts: opts, module: __MODULE__] do
       import ExCLI.DSL
 
       @app %ExCLI.App{
         name: ExCLI.App.default_name(__MODULE__),
-        opts: unquote(opts)
+        opts: opts
       }
-      @before_compile unquote(__MODULE__)
+      @before_compile module
       @command nil
+
+      if mix_task_name = opts[:mix_task] do
+        module.__define_mix_task__(__MODULE__, mix_task_name)
+      end
+
+      if opts[:escript] do
+        def main(args) do
+          ExCLI.run!(__MODULE__, args)
+        end
+      end
     end
   end
 
@@ -198,6 +208,25 @@ defmodule ExCLI.DSL do
       @app Map.put(@app, :commands, [@command | @app.commands])
       @command nil
     end
+  end
+
+  @doc false
+  def __define_mix_task__(mod, name) do
+    contents = quote do
+      use Mix.Task
+      def run(args) do
+        ExCLI.run!(unquote(mod), args)
+      end
+    end
+    module = String.to_atom("Elixir.Mix.Tasks.#{name_to_module(name)}")
+    Module.create(module, contents, __ENV__)
+  end
+
+  defp name_to_module(name) do
+    name
+    |> to_string()
+    |> String.replace_leading("Elixir.", "")
+    |> Macro.camelize
   end
 
   defmacro __before_compile__(_env) do
