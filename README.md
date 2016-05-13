@@ -12,7 +12,7 @@ Add `ex_cli` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:ex_cli, "~> 0.0.1"}]
+  [{:ex_cli, "~> 0.1.0"}]
 end
 ```
 
