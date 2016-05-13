@@ -4,20 +4,14 @@ defmodule ExCLI.Formatter.Text do
   alias ExCLI.{Argument, Util}
 
   def format(app, opts \\ []) do
-    newline = if opts[:mix], do: "\n\n", else: "\n"
-    pad_with = if opts[:mix], do: "\t", else: " "
-    name = Keyword.get(opts, :name, app.name)
-    banner = "usage: #{name} "
-    padding = byte_size(banner)
-    width = Keyword.get(opts, :width, 80) - padding
+    opts = opts |> Keyword.put_new(:name, app.name) |> make_app_opts()
     arguments = format_options(app.options) ++ ["<command>", "[<args>]"]
-    join_opts = [width: width, padding: padding, newline: newline, pad_with: pad_with]
-    formatted_arguments = Util.pretty_join(arguments, join_opts)
+    formatted_arguments = Util.pretty_join(arguments, opts)
 
-    banner
+    opts[:banner]
     <> formatted_arguments
-    <> "\n#{newline}Commands#{newline}" <> String.duplicate(pad_with, 3)
-    <> format_commands(app.commands, newline: newline, pad_with: pad_with)
+    <> "\n#{opts[:newline]}Commands#{opts[:newline]}" <> String.duplicate(opts[:pad_with], 3)
+    <> format_commands(app.commands, opts)
   end
 
   def format_options(options, opts \\ []) do
@@ -32,19 +26,17 @@ defmodule ExCLI.Formatter.Text do
   end
 
   def format_commands(commands, opts \\ []) do
-    newline = Keyword.get(opts, :newline, "\n")
-    pad_with = Keyword.get(opts, :pad_with, " ")
+    opts = make_opts(opts)
     space_size = commands_space_size(commands)
     commands
     |> Enum.map(&format_command(&1, space_size: space_size))
-    |> Enum.join("#{newline}" <> String.duplicate(pad_with, 3))
+    |> Enum.join("#{opts[:newline]}" <> String.duplicate(opts[:pad_with], 3))
   end
 
   def format_command(command, opts \\ []) do
-    space_size = Keyword.get(opts, :space_size, 2)
     name = Atom.to_string(command.name)
     if description = command.description do
-      name <> String.duplicate(" ", space_size) <> description
+      name <> String.duplicate(" ", Keyword.get(opts, :space_size, 2)) <> description
     else
       name
     end
@@ -72,5 +64,21 @@ defmodule ExCLI.Formatter.Text do
   defp format_optional(string, false), do: string
   defp format_optional(string, true) do
     "[" <> string <> "]"
+  end
+
+  defp make_opts(opts) do
+    opts
+    |> Keyword.put_new(:newline, if(opts[:mix], do: "\n\n", else: "\n"))
+    |> Keyword.put_new(:pad_with, if(opts[:mix], do: "\t", else: " "))
+  end
+
+  defp make_app_opts(opts) do
+    banner = "usage: #{opts[:name]} "
+    padding = byte_size(banner)
+    opts
+    |> Keyword.put_new(:banner, banner)
+    |> Keyword.put_new(:padding, padding)
+    |> Keyword.put(:width, Keyword.get(opts, :width, 80) - padding)
+    |> make_opts()
   end
 end
