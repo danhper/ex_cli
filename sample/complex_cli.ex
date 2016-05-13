@@ -7,7 +7,7 @@ defmodule MyApp.ComplexCLI do
   This is my long description
   """
 
-  option :verbose, help: "Increase the verbosity level", aliases: [:v], count: true
+  option :v, help: "Increase the verbosity level", count: true, as: :verbose
   option :debug, help: "Set the debug mode", type: :boolean
   option :base_directory, help: "Set the base directory", metavar: "directory"
   option :log_file, help: "Set the log file", metavar: "file"
@@ -33,6 +33,8 @@ defmodule MyApp.ComplexCLI do
   end
 
   command :speak do
-    description "Gives a nice talk"
+    run _context do
+      IO.puts "I can speak"
+    end
   end
 end

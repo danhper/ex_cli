@@ -42,6 +42,7 @@ defmodule ExCLI.Formatter.Text do
     end
   end
 
+  defp commands_space_size([]), do: 0
   defp commands_space_size(commands) do
     command_lengths = commands |> Enum.map(&(&1.name |> to_string |> byte_size))
     Enum.max(command_lengths) - Enum.min(command_lengths) + 3

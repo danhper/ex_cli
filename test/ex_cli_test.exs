@@ -21,4 +21,20 @@ defmodule ExCLITest do
   test "run error" do
     assert ExCLI.run(MyApp.SampleCLI, ["hello"]) == {:error, :missing_argument, name: :name}
   end
+
+  test "run!" do
+    assert capture_io(fn ->
+      ExCLI.run!(MyApp.ComplexCLI, ["-v", "hello", "world", "--from", "Daniel"])
+    end) == "Running hello command.\nDaniel says: Hello world!\n"
+  end
+
+  test "run! failure" do
+    assert ("No command provided" <> _rest) = capture_io(fn ->
+      ExCLI.run!(MyApp.SampleCLI, [], no_halt: true)
+    end)
+  end
+
+  test "usage" do
+    assert ("usage: " <> _rest) = ExCLI.usage(MyApp.ComplexCLI)
+  end
 end

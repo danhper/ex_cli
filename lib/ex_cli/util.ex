@@ -34,14 +34,14 @@ defmodule ExCLI.Util do
   end
 
   def pretty_join(strings, opts \\ []) do
-    if width = Keyword.get(opts, :width, 80) do
-      opts =
-        opts
-        |> Keyword.put_new(:newline, "\n")
-        |> Keyword.put_new(:pad_with, " ")
-      do_pretty_join(strings, width, [""], opts)
-    else
-      Enum.join(strings)
+    case Keyword.get(opts, :width, 80) do
+      :infinity -> Enum.join(strings, " ")
+      width ->
+        opts =
+          opts
+          |> Keyword.put_new(:newline, "\n")
+          |> Keyword.put_new(:pad_with, " ")
+        do_pretty_join(strings, width, [""], opts)
     end
   end
   defp do_pretty_join([], _width, acc, opts) do

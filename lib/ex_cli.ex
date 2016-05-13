@@ -51,7 +51,7 @@ defmodule ExCLI do
       {:error, reason, details} ->
         IO.puts(ExCLI.Formatter.Error.format(reason, details))
         IO.puts(usage(module, opts))
-        System.halt(1)
+        unless opts[:no_halt], do: System.halt(1)
     end
   end
 
