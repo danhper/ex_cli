@@ -55,7 +55,7 @@ defmodule MyApp.SampleCLI do
   end
 end
 
-ExCLI.run(MyApp.SampleCLI)
+ExCLI.run!(MyApp.SampleCLI)
 ```
 
 Which can be used in the following way.
@@ -63,6 +63,62 @@ Which can be used in the following way.
 ```
 sample_cli hello -vv world --from me
 ```
+
+The application usage will be shown if the parsing fails. The above example would show:
+
+```
+usage: mycli [--verbose] <command> [<args>]
+
+Commands
+   hello   Greets the user
+```
+
+## `escript` and `mix` integration
+
+You can very easily generate a mix task or an escript using `ExCLI`
+
+### `escript`
+
+Pass `escript: true` to the `use ExCLI.DSL` and set the module as `escript` `:main_module`:
+
+```
+# lib/my_escript_cli.ex
+defmodule MyEscriptCLI do
+  use ExCLI, escript: true
+end
+
+# mix.exs
+defmodule MyApp.Mixfile do
+  def project do
+    [app: :my_app,
+     escript: [main_module: MyEscriptCLI]]
+  end
+end
+```
+
+### `mix` integration
+
+Pass `mix_task: TASK_NAME` to the `use ExCLI.DSL`.
+
+```
+# lib/my_cli_task.ex
+defmodule MyCLITask do
+  use ExCLI, mix_task: :great_task
+end
+```
+
+You can then run
+
+```
+mix great_task
+```
+
+and get nicely formatted help with
+
+```
+mix help great_task
+```
+
 
 ## Documentation
 
@@ -74,9 +130,13 @@ Check out the [documentation][1] for more information.
 
     The command parser is now working and should be enough for a good number of tasks.
 
-  * [ ] Usage generation
+  * [x] Integration with `escript` and `mix`
 
-    The next step is to get a pretty usage that can be shown to the user.
+    `ExCLI.DSL` can generate a module compatible with `escript.build` as well as a `mix` task.
+
+  * [x] Usage generation
+
+    A nicely formatted usage is generated from the DSL.
 
   * [ ] Help command
 
