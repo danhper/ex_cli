@@ -81,7 +81,7 @@ You can very easily generate a mix task or an escript using `ExCLI`
 
 Pass `escript: true` to the `use ExCLI.DSL` and set the module as `escript` `:main_module`:
 
-```
+```elixir
 # lib/my_escript_cli.ex
 defmodule MyEscriptCLI do
   use ExCLI, escript: true
@@ -96,11 +96,15 @@ defmodule MyApp.Mixfile do
 end
 ```
 
+Here is a small screencast of what it looks like:
+
+![screencast][2]
+
 ### `mix` integration
 
 Pass `mix_task: TASK_NAME` to the `use ExCLI.DSL`.
 
-```
+```elixir
 # lib/my_cli_task.ex
 defmodule MyCLITask do
   use ExCLI, mix_task: :great_task
@@ -161,3 +165,4 @@ Contributions are very welcome, feel free to open an issue or a PR.
 I am also looking for a better name, ideas are welcome!
 
 [1]: https://hexdocs.pm/ex_cli/api-reference.html
+[2]: https://cloud.githubusercontent.com/assets/1436271/15253363/e488b5ce-196c-11e6-97e0-e596d26ec0f1.gif
