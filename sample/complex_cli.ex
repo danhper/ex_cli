@@ -1,5 +1,5 @@
 defmodule MyApp.ComplexCLI do
-  use ExCLI.DSL, mix_task: Complex, escript: true
+  use ExCLI.DSL, mix_task: :complex, escript: true
 
   name "mycli"
   description "My CLI"

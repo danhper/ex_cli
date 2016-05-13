@@ -4,16 +4,20 @@ defmodule ExCLI.Formatter.Text do
   alias ExCLI.{Argument, Util}
 
   def format(app, opts \\ []) do
-    banner = "usage: #{opts[:prefix]}#{app.name} "
+    newline = if opts[:mix], do: "\n\n", else: "\n"
+    pad_with = if opts[:mix], do: "\t", else: " "
+    name = Keyword.get(opts, :name, app.name)
+    banner = "usage: #{name} "
     padding = byte_size(banner)
     width = Keyword.get(opts, :width, 80) - padding
     arguments = format_options(app.options) ++ ["<command>", "[<args>]"]
-    formatted_arguments = Util.pretty_join(arguments, width: width, padding: padding)
+    join_opts = [width: width, padding: padding, newline: newline, pad_with: pad_with]
+    formatted_arguments = Util.pretty_join(arguments, join_opts)
 
     banner
     <> formatted_arguments
-    <> "\n\nCommands\n   "
-    <> format_commands(app.commands)
+    <> "\n#{newline}Commands#{newline}" <> String.duplicate(pad_with, 3)
+    <> format_commands(app.commands, newline: newline, pad_with: pad_with)
   end
 
   def format_options(options, opts \\ []) do
@@ -27,11 +31,13 @@ defmodule ExCLI.Formatter.Text do
     format_optional(formatted_option, !option.required)
   end
 
-  def format_commands(commands) do
+  def format_commands(commands, opts \\ []) do
+    newline = Keyword.get(opts, :newline, "\n")
+    pad_with = Keyword.get(opts, :pad_with, " ")
     space_size = commands_space_size(commands)
     commands
     |> Enum.map(&format_command(&1, space_size: space_size))
-    |> Enum.join("\n   ")
+    |> Enum.join("#{newline}" <> String.duplicate(pad_with, 3))
   end
 
   def format_command(command, opts \\ []) do

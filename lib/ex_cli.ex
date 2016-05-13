@@ -43,14 +43,14 @@ defmodule ExCLI do
     end
   end
 
-  @spec run!(atom, [String.t]) :: any
-  def run!(module, args \\ System.argv) do
+  @spec run!(atom, [String.t], Keyword.t) :: any
+  def run!(module, args \\ System.argv, opts \\ []) do
     case parse(module, args) do
       {:ok, command, context} ->
         module.__run__(command, context)
       {:error, reason, details} ->
         IO.puts(ExCLI.Formatter.Error.format(reason, details))
-        IO.puts(usage(module))
+        IO.puts(usage(module, opts))
         System.halt(1)
     end
   end

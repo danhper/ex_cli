@@ -5,11 +5,17 @@ defmodule ExCLI.DSL do
   This module should be used in a CLI specific module,
   and the macros should be used to define an application.
 
+  ## Options
+
+    * `escript`  - If set to `true`, it will generate a `main` function so that the module can be set as the `main_module` of an `escript`
+    * `mix_task` - If specified, a mix task with the given name will be generated.
+
+
   ## Example
 
   ```elixir
   defmodule SampleCLI do
-    use ExCLI.DSL
+    use ExCLI.DSL, escript: true, mix_task: :sample
 
     name "mycli"
     description "My CLI"
@@ -54,11 +60,12 @@ defmodule ExCLI.DSL do
         name: ExCLI.App.default_name(__MODULE__),
         opts: opts
       }
+      @opts opts
       @before_compile module
       @command nil
 
-      if mix_task_name = opts[:mix_task] do
-        module.__define_mix_task__(__MODULE__, mix_task_name)
+      def name do
+        @app.name
       end
 
       if opts[:escript] do
@@ -211,11 +218,13 @@ defmodule ExCLI.DSL do
   end
 
   @doc false
-  def __define_mix_task__(mod, name) do
+  def __define_mix_task__(mod, app, name) do
+    app = Macro.escape(app)
     contents = quote do
+      @moduledoc ExCLI.Formatter.Text.format(unquote(app), name: "mix #{unquote(name)}", mix: true)
       use Mix.Task
       def run(args) do
-        ExCLI.run!(unquote(mod), args)
+        ExCLI.run!(unquote(mod), args, name: "mix #{unquote(name)}")
       end
     end
     module = String.to_atom("Elixir.Mix.Tasks.#{name_to_module(name)}")
@@ -236,6 +245,10 @@ defmodule ExCLI.DSL do
       @doc false
       def __app__ do
         @app
+      end
+
+      if task = @opts[:mix_task] do
+        unquote(__MODULE__).__define_mix_task__(__MODULE__, @app, task)
       end
     end
   end

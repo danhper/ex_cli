@@ -35,14 +35,18 @@ defmodule ExCLI.Util do
 
   def pretty_join(strings, opts \\ []) do
     if width = Keyword.get(opts, :width, 80) do
+      opts =
+        opts
+        |> Keyword.put_new(:newline, "\n")
+        |> Keyword.put_new(:pad_with, " ")
       do_pretty_join(strings, width, [""], opts)
     else
       Enum.join(strings)
     end
   end
   defp do_pretty_join([], _width, acc, opts) do
-    padding = String.duplicate(" ", Keyword.get(opts, :padding, 0))
-    acc |> Enum.reverse |> Enum.join("\n#{padding}")
+    padding = String.duplicate(opts[:pad_with], Keyword.get(opts, :padding, 0))
+    acc |> Enum.reverse |> Enum.join("#{opts[:newline]}#{padding}")
   end
   defp do_pretty_join([head | rest], width, [current | others], opts)
       when byte_size(head) + byte_size(current) < width do
