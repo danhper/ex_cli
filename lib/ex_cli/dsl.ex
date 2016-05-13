@@ -5,11 +5,17 @@ defmodule ExCLI.DSL do
   This module should be used in a CLI specific module,
   and the macros should be used to define an application.
 
+  ## Options
+
+    * `escript`  - If set to `true`, it will generate a `main` function so that the module can be set as the `main_module` of an `escript`
+    * `mix_task` - If specified, a mix task with the given name will be generated.
+
+
   ## Example
 
   ```elixir
   defmodule SampleCLI do
-    use ExCLI.DSL
+    use ExCLI.DSL, escript: true, mix_task: :sample
 
     name "mycli"
     description "My CLI"
@@ -47,15 +53,26 @@ defmodule ExCLI.DSL do
 
   @doc false
   defmacro __using__(opts) do
-    quote do
+    quote bind_quoted: [opts: opts, module: __MODULE__] do
       import ExCLI.DSL
 
       @app %ExCLI.App{
         name: ExCLI.App.default_name(__MODULE__),
-        opts: unquote(opts)
+        opts: opts
       }
-      @before_compile unquote(__MODULE__)
+      @opts opts
+      @before_compile module
       @command nil
+
+      def name do
+        @app.name
+      end
+
+      if opts[:escript] do
+        def main(args) do
+          ExCLI.run!(__MODULE__, args)
+        end
+      end
     end
   end
 
@@ -103,8 +120,9 @@ defmodule ExCLI.DSL do
       * `:float`   - Will be parsed as a float
       * `:boolean` - Will be parsed as a boolean (should be `"yes"` or `"no"`)
     * `:list`    - When true, the argument will accept multiple values and should be the last argument of the command
-    * `:default` - The default value for the argument
-    * `:as`      - The key of the argument in the context
+    * `:default` - The default value for the option
+    * `:as`      - The key of the option in the context
+    * `:metavar` - The name of the option argument displayed in the help
 
   """
   @spec argument(atom, Keyword.t) :: any
@@ -199,6 +217,27 @@ defmodule ExCLI.DSL do
     end
   end
 
+  @doc false
+  def __define_mix_task__(mod, app, name) do
+    app = Macro.escape(app)
+    contents = quote do
+      @moduledoc ExCLI.Formatter.Text.format(unquote(app), name: "mix #{unquote(name)}", mix: true)
+      use Mix.Task
+      def run(args) do
+        ExCLI.run!(unquote(mod), args, name: "mix #{unquote(name)}")
+      end
+    end
+    module = String.to_atom("Elixir.Mix.Tasks.#{name_to_module(name)}")
+    Module.create(module, contents, __ENV__)
+  end
+
+  defp name_to_module(name) do
+    name
+    |> to_string()
+    |> String.replace_leading("Elixir.", "")
+    |> Macro.camelize
+  end
+
   defmacro __before_compile__(_env) do
     quote do
       @app ExCLI.App.finalize(@app)
@@ -206,6 +245,10 @@ defmodule ExCLI.DSL do
       @doc false
       def __app__ do
         @app
+      end
+
+      if task = @opts[:mix_task] do
+        unquote(__MODULE__).__define_mix_task__(__MODULE__, @app, task)
       end
     end
   end

@@ -16,7 +16,7 @@ defmodule ExCLI.Parser do
   end
 
   defp process_args([], %ExCLI.Command{arguments: [%Argument{list: false, default: nil} = arg | _rest]}, _valid_options, _context) do
-    {:error, :arg_missing, name: arg.name}
+    {:error, :missing_argument, name: arg.name}
   end
   defp process_args([], _command, _valid_options, context), do: {:ok, [], context}
   defp process_args([{:option, name} | rest], command, valid_options, context) do
@@ -46,7 +46,7 @@ defmodule ExCLI.Parser do
   defp pop_argument(command, value) do
     case command.arguments do
       [] ->
-        {:error, :too_many_args, value: value}
+        {:error, :too_many_arguments, value: value}
       [%Argument{list: true} = arg] ->
         {:ok, arg, command}
       [%Argument{} = arg | rest] ->
@@ -103,10 +103,10 @@ defmodule ExCLI.Parser do
   end
 
   defp process_value(arg, _context, []) do
-    {:error, :option_arg_missing, name: arg.name}
+    {:error, :missing_option_argument, name: arg.name}
   end
   defp process_value(arg, _context, [{:option, _option} | _rest]) do
-    {:error, :option_arg_missing, name: arg.name}
+    {:error, :missing_option_argument, name: arg.name}
   end
   defp process_value(arg, context, [{:arg, value} | rest]) do
     with {:ok, transformed} <- transform_arg_value(arg, value) do
@@ -173,7 +173,7 @@ defmodule ExCLI.Parser do
   defp validate_options([], _context), do: :ok
   defp validate_options([option | rest], context) do
     if option.required and not Map.has_key?(context, Argument.key(option)) do
-      {:error, :option_missing, name: option.name}
+      {:error, :missing_option, name: option.name}
     else
       validate_options(rest, context)
     end

@@ -8,6 +8,7 @@ defmodule ExCLI.Argument do
     :num,
     :help,
     :arg_type,
+    :metavar,
     :process,
     list: false,
     accumulate: false,

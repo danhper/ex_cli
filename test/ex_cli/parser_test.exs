@@ -7,14 +7,14 @@ defmodule ExCLI.ParserTest do
     assert Parser.parse(%ExCLI.App{}, []) == {:error, :no_command, []}
     assert Parser.parse(%ExCLI.App{}, ["--foo"]) == {:error, :unknown_option, [name: :foo]}
     assert Parser.parse(%ExCLI.App{}, ["foo"]) == {:error, :unknown_command, [name: :foo]}
-    assert Parser.parse(app(:hello, [foo: []]), ["hello"]) == {:error, :arg_missing, [name: :foo]}
-    assert Parser.parse(app(:hello), ["hello", "foo"]) == {:error, :too_many_args, [value: "foo"]}
-    assert Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo", "bar", "baz"]) == {:error, :too_many_args, [value: "baz"]}
+    assert Parser.parse(app(:hello, [foo: []]), ["hello"]) == {:error, :missing_argument, [name: :foo]}
+    assert Parser.parse(app(:hello), ["hello", "foo"]) == {:error, :too_many_arguments, [value: "foo"]}
+    assert Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo", "bar", "baz"]) == {:error, :too_many_arguments, [value: "baz"]}
     assert Parser.parse(app(:hello, [foo: [type: :integer]]), ["hello", "a"]) == {:error, :bad_argument, [name: :foo, type: :integer]}
     assert Parser.parse(app(:hello, [], [foo: [type: :integer]]), ["hello", "--foo", "a"]) == {:error, :bad_argument, [name: :foo, type: :integer]}
     assert Parser.parse(app(:hello, [foo: [type: :boolean]]), ["hello", "a"]) == {:error, :bad_argument, [name: :foo, type: :boolean]}
-    assert Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo"]) == {:error, :option_arg_missing, [name: :foo]}
-    assert Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo", "--bar"]) == {:error, :option_arg_missing, [name: :foo]}
+    assert Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo"]) == {:error, :missing_option_argument, [name: :foo]}
+    assert Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo", "--bar"]) == {:error, :missing_option_argument, [name: :foo]}
   end
 
   test "basic inputs" do
@@ -68,7 +68,7 @@ defmodule ExCLI.ParserTest do
   end
 
   test "required options" do
-    assert Parser.parse(app(:hello, [], [foo: [required: true]]), ["hello"]) == {:error, :option_missing, name: :foo}
+    assert Parser.parse(app(:hello, [], [foo: [required: true]]), ["hello"]) == {:error, :missing_option, name: :foo}
     assert Parser.parse(app(:hello, [], [foo: [required: true]]), ["hello", "--foo", "bar"]) == {:ok, :hello, %{foo: "bar"}}
   end
 

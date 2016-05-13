@@ -19,8 +19,7 @@ defmodule ExCLI do
   """
   @spec parse(atom, [String.t]) :: {:ok, atom, map} | {:error, atom, Keyword.t}
   def parse(module, args \\ System.argv) do
-    app = module.__app__
-    ExCLI.Parser.parse(app, args)
+    ExCLI.Parser.parse(app(module), args)
   end
 
   @doc """
@@ -43,4 +42,25 @@ defmodule ExCLI do
         err
     end
   end
+
+  @spec run!(atom, [String.t], Keyword.t) :: any
+  def run!(module, args \\ System.argv, opts \\ []) do
+    case parse(module, args) do
+      {:ok, command, context} ->
+        module.__run__(command, context)
+      {:error, reason, details} ->
+        IO.puts(ExCLI.Formatter.Error.format(reason, details))
+        IO.puts(usage(module, opts))
+        unless opts[:no_halt], do: System.halt(1)
+    end
+  end
+
+  @doc """
+  Displays the usage for the given module
+  """
+  def usage(module, opts \\ []) do
+    ExCLI.Formatter.Text.format(app(module), opts)
+  end
+
+  defp app(module), do: module.__app__
 end

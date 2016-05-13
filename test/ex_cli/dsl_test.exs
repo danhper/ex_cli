@@ -46,4 +46,25 @@ defmodule ExCLI.DSLTest do
       Code.eval_quoted(bad_module)
     end
   end
+
+  test "mix task" do
+    module = quote do
+      defmodule TaskCLI do
+        use ExCLI.DSL, mix_task: :foo
+      end
+    end
+    Code.eval_quoted(module)
+    assert Code.ensure_loaded?(Mix.Tasks.Foo)
+    assert function_exported?(Mix.Tasks.Foo, :run, 1)
+  end
+
+  test "escript" do
+    module = quote do
+      defmodule EscriptCLI do
+        use ExCLI.DSL, escript: true
+      end
+    end
+    Code.eval_quoted(module)
+    assert function_exported?(EscriptCLI, :main, 1)
+  end
 end
