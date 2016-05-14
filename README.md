@@ -4,7 +4,13 @@
 [![Coverage Status](https://coveralls.io/repos/github/tuvistavie/ex_cli/badge.svg?branch=master)](https://coveralls.io/github/tuvistavie/ex_cli?branch=master)
 [![Hex.pm](https://img.shields.io/hexpm/v/ex_cli.svg?maxAge=2592000)](https://hex.pm/packages/ex_cli)
 
-Elixir library to build CLI applications.
+User friendly CLI apps for Elixir.
+
+## Screencast
+
+Here is a small screencast of what a generated CLI app looks like.
+
+![screencast][2]
 
 ## Installation
 
@@ -95,10 +101,6 @@ defmodule MyApp.Mixfile do
   end
 end
 ```
-
-Here is a small screencast of what it looks like:
-
-![screencast][2]
 
 ### `mix` integration
 
