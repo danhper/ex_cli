@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/tuvistavie/ex_cli.svg?branch=master)](https://travis-ci.org/tuvistavie/ex_cli)
 [![Coverage Status](https://coveralls.io/repos/github/tuvistavie/ex_cli/badge.svg?branch=master)](https://coveralls.io/github/tuvistavie/ex_cli?branch=master)
-[![Hex.pm](https://img.shields.io/hexpm/v/ex_cli.svg?maxAge=2592000)](https://hex.pm/packages/ex_cli)
+[![Hex.pm](https://img.shields.io/hexpm/v/ex_cli.svg)](https://hex.pm/packages/ex_cli)
 
 User friendly CLI apps for Elixir.
 
