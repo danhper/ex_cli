@@ -165,4 +165,4 @@ Contributions are very welcome, feel free to open an issue or a PR.
 I am also looking for a better name, ideas are welcome!
 
 [1]: https://hexdocs.pm/ex_cli/api-reference.html
-[2]: https://cloud.githubusercontent.com/assets/1436271/15253363/e488b5ce-196c-11e6-97e0-e596d26ec0f1.gif
+[2]: https://cloud.githubusercontent.com/assets/1436271/15265160/fddba4ea-19b8-11e6-9f48-1ac3be7e839c.gif
