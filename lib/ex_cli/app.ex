@@ -32,9 +32,10 @@ defmodule ExCLI.App do
 
   @doc false
   def finalize(app) do
+    commands = app.commands |> Enum.map(&ExCLI.Command.finalize(&1, app.opts)) |> Enum.reverse()
     app
     |> Map.put(:options, Enum.reverse(app.options))
-    |> Map.put(:commands, Enum.map(app.commands, &ExCLI.Command.finalize(&1, app.opts)))
+    |> Map.put(:commands, commands)
     |> Map.put(:normalized_options, ExCLI.Util.generate_options(app.options, app.opts))
   end
 end

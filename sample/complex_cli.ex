@@ -32,9 +32,9 @@ defmodule MyApp.ComplexCLI do
     end
   end
 
-  command :speak do
+  command :talk do
     run _context do
-      IO.puts "I can speak"
+      IO.puts "I can talk"
     end
   end
 end

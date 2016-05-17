@@ -29,7 +29,7 @@ defmodule ExCLITest do
   end
 
   test "run! failure" do
-    assert ("No command provided" <> _rest) = capture_io(fn ->
+    assert ("No command provided" <> _rest) = capture_io(:stderr, fn ->
       ExCLI.run!(MyApp.SampleCLI, [], no_halt: true)
     end)
   end

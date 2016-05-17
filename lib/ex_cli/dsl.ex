@@ -238,8 +238,30 @@ defmodule ExCLI.DSL do
     |> Macro.camelize
   end
 
+  @doc false
+  def __help_command__ do
+    quote do
+      command :help do
+        argument :command, required: false
+        description "Shows help about the command"
+        run context do
+          # TODO: check why we get a compile error when using `command`
+          if command = binding[:context][:command] do
+            IO.inspect(command)
+          else
+            IO.puts ExCLI.usage(__MODULE__)
+          end
+        end
+      end
+    end
+  end
+
   defmacro __before_compile__(_env) do
     quote do
+      unless @opts[:no_help] do
+        unquote(ExCLI.DSL.__help_command__)
+      end
+
       @app ExCLI.App.finalize(@app)
 
       @doc false

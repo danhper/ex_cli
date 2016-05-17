@@ -36,7 +36,8 @@ defmodule ExCLI.Formatter.Text do
   def format_command(command, opts \\ []) do
     name = Atom.to_string(command.name)
     if description = command.description do
-      name <> String.duplicate(" ", Keyword.get(opts, :space_size, 2)) <> description
+      spaces = Keyword.get(opts, :space_size, 2) - String.length(name)
+      name <> String.duplicate(" ", spaces) <> description
     else
       name
     end
@@ -45,7 +46,7 @@ defmodule ExCLI.Formatter.Text do
   defp commands_space_size([]), do: 0
   defp commands_space_size(commands) do
     command_lengths = commands |> Enum.map(&(&1.name |> to_string |> byte_size))
-    Enum.max(command_lengths) - Enum.min(command_lengths) + 3
+    Enum.max(command_lengths) + 3
   end
 
   defp format_argument(%Argument{type: :boolean}), do: nil

@@ -25,8 +25,12 @@ defmodule ExCLI.Argument do
   end
 
   def new(name, arg_type, options \\ []) do
-    Enum.reduce options, %ExCLI.Argument{name: name, arg_type: arg_type}, fn({key, value}, arg) ->
+    Enum.reduce options, build(name, arg_type), fn({key, value}, arg) ->
       Map.put(arg, key, value)
     end
+  end
+
+  defp build(name, arg_type) do
+    %ExCLI.Argument{name: name, arg_type: arg_type, required: arg_type == :arg}
   end
 end

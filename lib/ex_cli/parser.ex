@@ -35,14 +35,14 @@ defmodule ExCLI.Parser do
       {:ok, command.name, finalize_context(context)}
     end |>
     case do
-      {:error, reason, details} = err ->
+      {:error, reason, details} ->
         {:error, reason, Keyword.put(details, :command, command)}
       {:ok, _name, _context} = result ->
         result
     end
   end
 
-  defp process_args([], %ExCLI.Command{arguments: [%Argument{list: false, default: nil} = arg | _rest]}, _valid_options, _context) do
+  defp process_args([], %ExCLI.Command{arguments: [%Argument{list: false, default: nil, required: true} = arg | _rest]}, _valid_options, _context) do
     {:error, :missing_argument, name: arg.name}
   end
   defp process_args([], _command, _valid_options, context), do: {:ok, [], context}

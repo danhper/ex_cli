@@ -43,14 +43,26 @@ defmodule ExCLI do
     end
   end
 
+  @doc """
+  Parse and run the arguments with a module using `ExCLI.DSL`.
+  If the command fails, the error and usage will be outputed to stderr,
+  before exiting with an error status of 1.
+
+  ## Example
+
+  ```
+  ExCLI.run(MyApp.CLI)
+
+  ExCLI.run(MyApp.CLI, ["some", "args"])
+  ```
+  """
   @spec run!(atom, [String.t], Keyword.t) :: any
   def run!(module, args \\ System.argv, opts \\ []) do
     case parse(module, args) do
       {:ok, command, context} ->
         module.__run__(command, context)
       {:error, reason, details} ->
-        IO.puts(ExCLI.Formatter.Error.format(reason, details))
-        IO.puts(usage(module, opts))
+        output_error(module, reason, details, opts)
         unless opts[:no_halt], do: System.halt(1)
     end
   end
@@ -60,6 +72,16 @@ defmodule ExCLI do
   """
   def usage(module, opts \\ []) do
     ExCLI.Formatter.Text.format(app(module), opts)
+  end
+
+  defp output_error(module, reason, details, opts) do
+    IO.puts(:stderr, ExCLI.Formatter.Error.format(reason, details))
+    case details do
+      %{command: _command} ->
+        IO.inspect(details)
+      _ ->
+        IO.puts(:stderr, usage(module, opts))
+    end
   end
 
   defp app(module), do: module.__app__
