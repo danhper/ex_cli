@@ -4,17 +4,17 @@ defmodule ExCLI.ParserTest do
   alias ExCLI.Parser
 
   test "errors" do
-    assert Parser.parse(%ExCLI.App{}, []) == {:error, :no_command, []}
-    assert Parser.parse(%ExCLI.App{}, ["--foo"]) == {:error, :unknown_option, [name: :foo]}
-    assert Parser.parse(%ExCLI.App{}, ["foo"]) == {:error, :unknown_command, [name: :foo]}
-    assert Parser.parse(app(:hello, [foo: []]), ["hello"]) == {:error, :missing_argument, [name: :foo]}
-    assert Parser.parse(app(:hello), ["hello", "foo"]) == {:error, :too_many_arguments, [value: "foo"]}
-    assert Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo", "bar", "baz"]) == {:error, :too_many_arguments, [value: "baz"]}
-    assert Parser.parse(app(:hello, [foo: [type: :integer]]), ["hello", "a"]) == {:error, :bad_argument, [name: :foo, type: :integer]}
-    assert Parser.parse(app(:hello, [], [foo: [type: :integer]]), ["hello", "--foo", "a"]) == {:error, :bad_argument, [name: :foo, type: :integer]}
-    assert Parser.parse(app(:hello, [foo: [type: :boolean]]), ["hello", "a"]) == {:error, :bad_argument, [name: :foo, type: :boolean]}
-    assert Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo"]) == {:error, :missing_option_argument, [name: :foo]}
-    assert Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo", "--bar"]) == {:error, :missing_option_argument, [name: :foo]}
+    assert {:error, :no_command, %{}} = Parser.parse(%ExCLI.App{}, [])
+    assert {:error, :unknown_option, %{name: :foo}} == Parser.parse(%ExCLI.App{}, ["--foo"])
+    assert {:error, :unknown_command, %{name: :foo}} = Parser.parse(%ExCLI.App{}, ["foo"])
+    assert {:error, :missing_argument, %{name: :foo, command: _}} = Parser.parse(app(:hello, [foo: []]), ["hello"])
+    assert {:error, :too_many_arguments, %{value: "foo", command: _}} = Parser.parse(app(:hello), ["hello", "foo"])
+    assert {:error, :too_many_arguments, %{value: "baz", command: _}} = Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo", "bar", "baz"])
+    assert {:error, :bad_argument, %{name: :foo, type: :integer, command: _}} = Parser.parse(app(:hello, [foo: [type: :integer]]), ["hello", "a"])
+    assert {:error, :bad_argument, %{name: :foo, type: :integer, command: _}} = Parser.parse(app(:hello, [], [foo: [type: :integer]]), ["hello", "--foo", "a"])
+    assert {:error, :bad_argument, %{name: :foo, type: :boolean, command: _}} = Parser.parse(app(:hello, [foo: [type: :boolean]]), ["hello", "a"])
+    assert {:error, :missing_option_argument, %{name: :foo, command: _}} = Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo"])
+    assert {:error, :missing_option_argument, %{name: :foo, command: _}} = Parser.parse(app(:hello, [], [foo: []]), ["hello", "--foo", "--bar"])
   end
 
   test "basic inputs" do
@@ -68,7 +68,7 @@ defmodule ExCLI.ParserTest do
   end
 
   test "required options" do
-    assert Parser.parse(app(:hello, [], [foo: [required: true]]), ["hello"]) == {:error, :missing_option, name: :foo}
+    assert {:error, :missing_option, %{name: :foo, command: _}} = Parser.parse(app(:hello, [], [foo: [required: true]]), ["hello"])
     assert Parser.parse(app(:hello, [], [foo: [required: true]]), ["hello", "--foo", "bar"]) == {:ok, :hello, %{foo: "bar"}}
   end
 

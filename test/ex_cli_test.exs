@@ -19,7 +19,7 @@ defmodule ExCLITest do
   end
 
   test "run error" do
-    assert ExCLI.run(MyApp.SampleCLI, ["hello"]) == {:error, :missing_argument, name: :name}
+    assert {:error, :missing_argument, %{name: :name, command: _}} = ExCLI.run(MyApp.SampleCLI, ["hello"])
   end
 
   test "run!" do

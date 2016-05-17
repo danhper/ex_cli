@@ -3,15 +3,42 @@ defmodule ExCLI.Parser do
 
   alias ExCLI.Argument
 
+
   def parse(app, args) do
+    case do_parse(app, args) do
+      {:ok, _command, _context} = result ->
+        result
+      {:error, reason, details} ->
+        {:error, reason, Enum.into(details, %{})}
+    end
+  end
+
+  defp do_parse(app, args) do
+    with {:ok, command, context, args} <- parse_global(app, args) do
+      parse_command(app, command, context, args)
+    end
+  end
+
+  defp parse_global(app, args) do
     with {:ok, args} <- ExCLI.Normalizer.normalize(args),
          {:ok, args, context} <- process_args(args, nil, app.normalized_options, %{}),
          {command_name, args} <- extract_command(args),
-         {:ok, command} <- find_command(app, command_name),
-         {:ok, [], context} <- process_args(args, command, command.normalized_options, context),
+         {:ok, command} <- find_command(app, command_name) do
+      {:ok, command, context, args}
+   end
+  end
+
+  defp parse_command(app, command, context, args) do
+    with {:ok, [], context} <- process_args(args, command, command.normalized_options, context),
          context = add_defaults(context, app.options ++ command.arguments ++ command.options),
-         :ok <- validate_context(app, command, context) do
+        :ok <- validate_context(app, command, context) do
       {:ok, command.name, finalize_context(context)}
+    end |>
+    case do
+      {:error, reason, details} = err ->
+        {:error, reason, Keyword.put(details, :command, command)}
+      {:ok, _name, _context} = result ->
+        result
     end
   end
 
