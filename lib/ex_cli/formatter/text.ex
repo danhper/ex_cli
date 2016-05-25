@@ -4,36 +4,64 @@ defmodule ExCLI.Formatter.Text do
   alias ExCLI.{Argument, Util}
 
   def format(app, opts \\ []) do
-    opts = opts |> Keyword.put_new(:name, app.name) |> make_app_opts()
+    opts = opts |> Keyword.put_new(:name, app.name) |> make_full_opts()
     arguments = format_options(app.options) ++ ["<command>", "[<args>]"]
     formatted_arguments = Util.pretty_join(arguments, opts)
+    options = format_options_details(app.options, Keyword.put(opts, :no_brackets, true))
 
-    opts[:banner]
-    <> formatted_arguments
-    <> "\n#{opts[:newline]}Commands#{opts[:newline]}" <> String.duplicate(opts[:pad_with], 3)
-    <> format_commands(app.commands, opts)
-  end
-
-  def format_options(options, opts \\ []) do
-    options
-    |> Enum.map(&format_option(&1, opts))
-  end
-
-  def format_option(option, _opts \\ []) do
-    option_name = Atom.to_string(option.name)
-    formatted_option = Enum.join([format_option_name(option_name), format_argument(option)])
-    format_optional(formatted_option, !option.required)
-  end
-
-  def format_commands(commands, opts \\ []) do
-    opts = make_opts(opts)
-    space_size = commands_space_size(commands)
-    commands
-    |> Enum.map(&format_command(&1, space_size: space_size))
-    |> Enum.join("#{opts[:newline]}" <> String.duplicate(opts[:pad_with], 3))
+    [opts[:banner],
+     formatted_arguments,
+     "\n#{opts[:newline]}Commands#{opts[:newline]}" <> String.duplicate(opts[:pad_char], 3),
+     commands_summary(app.commands, opts)] |> IO.iodata_to_binary
   end
 
   def format_command(command, opts \\ []) do
+    name = if(opts[:prefix], do: opts[:prefix] <> " ", else: "") <> to_string(command.name)
+    opts = opts |> Keyword.put_new(:name, name) |> make_full_opts()
+    arguments = format_options(command.options) ++ Enum.map(command.arguments, & "<#{&1.name}>")
+    formatted_arguments = Util.pretty_join(arguments, opts)
+    options = format_options_details(command.options, opts)
+
+    [opts[:banner],
+     formatted_arguments,
+     String.duplicate(opts[:newline], 2),
+     "Options",
+     opts[:newline],
+     options] |> IO.iodata_to_binary
+  end
+
+  def format_options(options, opts \\ []) do
+    Enum.map(options, &format_option(&1, opts))
+  end
+
+  def format_options_details(options, opts) do
+    Enum.map(options, &format_option_details(&1, opts))
+    |> Enum.join(opts[:newline])
+  end
+
+  defp format_option_details(option, opts) do
+    [String.duplicate(opts[:pad_char], 3),
+     format_option(option, Keyword.put(opts, :no_brackets, true)),
+     opts[:newline],
+     String.duplicate(opts[:pad_char], 6),
+     option.help] |> IO.iodata_to_binary
+  end
+
+  def format_option(option, opts \\ []) do
+    option_name = Atom.to_string(option.name)
+    formatted_option = Enum.join([format_option_name(option_name), format_argument(option)])
+    format_optional(formatted_option, !option.required && !opts[:no_brackets])
+  end
+
+  def commands_summary(commands, opts \\ []) do
+    opts = make_opts(opts)
+    space_size = commands_space_size(commands)
+    commands
+    |> Enum.map(&command_summary(&1, space_size: space_size))
+    |> Enum.join("#{opts[:newline]}" <> String.duplicate(opts[:pad_char], 3))
+  end
+
+  def command_summary(command, opts \\ []) do
     name = Atom.to_string(command.name)
     if description = command.description do
       spaces = Keyword.get(opts, :space_size, 2) - String.length(name)
@@ -71,10 +99,10 @@ defmodule ExCLI.Formatter.Text do
   defp make_opts(opts) do
     opts
     |> Keyword.put_new(:newline, if(opts[:mix], do: "\n\n", else: "\n"))
-    |> Keyword.put_new(:pad_with, if(opts[:mix], do: "\t", else: " "))
+    |> Keyword.put_new(:pad_char, if(opts[:mix], do: "\t", else: " "))
   end
 
-  defp make_app_opts(opts) do
+  defp make_full_opts(opts) do
     banner = "usage: #{opts[:name]} "
     padding = byte_size(banner)
     opts
