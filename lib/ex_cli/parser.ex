@@ -35,7 +35,7 @@ defmodule ExCLI.Parser do
       {:ok, command.name, finalize_context(context)}
     end |>
     case do
-      {:error, reason, details} = err ->
+      {:error, reason, details}  ->
         {:error, reason, Keyword.put(details, :command, command)}
       {:ok, _name, _context} = result ->
         result
