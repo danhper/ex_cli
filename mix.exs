@@ -28,9 +28,9 @@ defmodule ExCLI.Mixfile do
   end
 
   defp deps do
-    [{:excoveralls, "~> 0.4", only: :test},
-     {:earmark,   "~> 0.1", only: :docs},
-     {:ex_doc,    "~> 0.11", only: :docs}]
+    [{:excoveralls, "~> 0.5", only: :test},
+     {:earmark,   "~> 1.0", only: :docs},
+     {:ex_doc,    "~> 0.13", only: :docs}]
   end
 
   defp package do
