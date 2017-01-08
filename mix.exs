@@ -12,9 +12,9 @@ defmodule ExCLI.Mixfile do
      source_url: "https://github.com/tuvistavie/ex_cli",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     package: package,
+     package: package(),
      test_coverage: [tool: ExCoveralls],
-     deps: deps,
+     deps: deps(),
      docs: [source_ref: "#{@version}", extras: ["README.md"], main: "readme"]]
   end
 
