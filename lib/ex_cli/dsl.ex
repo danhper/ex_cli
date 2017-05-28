@@ -29,6 +29,7 @@ defmodule ExCLI.DSL do
       count: true
 
     command :hello do
+      aliases [:hi]
       description "Greets the user"
       long_description \"""
       Gives a nice a warm greeting to whoever would listen
@@ -103,6 +104,22 @@ defmodule ExCLI.DSL do
         else
           @app Map.put(@app, key, value)
         end
+      end
+    end
+  end
+
+  @doc """
+  Adds aliases to the command.
+
+  Aliases can be used in place of the command's name on the command line.
+  """
+  @spec aliases([atom]) :: any
+  defmacro aliases(names) do
+    quote bind_quoted: [names: names] do
+      if @command do
+        @command Map.put(@command, :aliases, names)
+      else
+        raise "aliases can only be used inside a command"
       end
     end
   end

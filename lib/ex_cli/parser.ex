@@ -1,7 +1,7 @@
 defmodule ExCLI.Parser do
   @moduledoc false
 
-  alias ExCLI.Argument
+  alias ExCLI.{Argument, Command}
 
 
   def parse(app, args) do
@@ -85,7 +85,7 @@ defmodule ExCLI.Parser do
   defp extract_command([{:arg, command} | rest]), do: {String.to_atom(command), rest}
 
   defp find_command(app, command_name) do
-    case Enum.find(app.commands, &(&1.name == command_name)) do
+    case Enum.find(app.commands, &(Command.match?(&1, command_name))) do
       nil -> {:error, :unknown_command, name: command_name}
       command -> {:ok, command}
     end
