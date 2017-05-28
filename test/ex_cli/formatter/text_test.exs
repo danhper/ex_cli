@@ -1,14 +1,40 @@
 defmodule ExCLI.Formatter.TextTest do
   use ExUnit.Case
 
-  @sample_cli_expected_usage "usage: mycli [--verbose] <command> [<args>]\n\nCommands\n   hello   Greets the user"
-  @sample_cli_expected_mix_usage "usage: mycli [--verbose] <command> [<args>]\n\n\nCommands\n\n\t\t\thello   Greets the user"
+  @complex_cli_usage """
+  usage: mycli [-v] [--debug] [--base-directory=<directory>] [--log-file=<file>]
+               <command> [<args>]
+
+  Commands
+     talk    Talks to the user
+     speak
+     hello   Greets the user
+  """
+
+  @complex_cli_mix_usage """
+  usage: mycli [-v] [--debug] [--base-directory=<directory>] [--log-file=<file>]
+
+  \t\t\t\t\t\t\t\t\t\t\t\t\t<command> [<args>]
+
+
+  Commands
+
+  \t\t\ttalk    Talks to the user
+
+  \t\t\tspeak
+
+  \t\t\thello   Greets the user
+  """
 
   test "format" do
-    assert ExCLI.Formatter.Text.format(MyApp.SampleCLI.__app__) == @sample_cli_expected_usage
+    assert ExCLI.Formatter.Text.format(MyApp.ComplexCLI.__app__) == expected(@complex_cli_usage)
   end
 
   test "format for mix" do
-    assert ExCLI.Formatter.Text.format(MyApp.SampleCLI.__app__, mix: true) == @sample_cli_expected_mix_usage
+    assert ExCLI.Formatter.Text.format(MyApp.ComplexCLI.__app__, mix: true) == expected(@complex_cli_mix_usage)
+  end
+
+  defp expected(output) do
+    output |> String.replace_trailing("\n", "")
   end
 end

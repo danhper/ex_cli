@@ -27,25 +27,32 @@ defmodule ExCLI.Formatter.Text do
 
   def format_commands(commands, opts \\ []) do
     opts = make_opts(opts)
-    space_size = commands_space_size(commands)
+    column_width = command_name_column_width(commands)
     commands
-    |> Enum.map(&format_command(&1, space_size: space_size))
+    |> Enum.map(&format_command(&1, column_width: column_width))
     |> Enum.join("#{opts[:newline]}" <> String.duplicate(opts[:pad_with], 3))
   end
 
   def format_command(command, opts \\ []) do
     name = Atom.to_string(command.name)
+    name_width = command_name_width(command)
+    column_width = Keyword.get(opts, :column_width, name_width)
+    spaces = column_width - name_width + 3
     if description = command.description do
-      name <> String.duplicate(" ", Keyword.get(opts, :space_size, 2)) <> description
+      name <> String.duplicate(" ", spaces) <> description
     else
       name
     end
   end
 
-  defp commands_space_size([]), do: 0
-  defp commands_space_size(commands) do
-    command_lengths = commands |> Enum.map(&(&1.name |> to_string |> byte_size))
-    Enum.max(command_lengths) - Enum.min(command_lengths) + 3
+  defp command_name_column_width([]), do: 0
+  defp command_name_column_width(commands) do
+    command_lengths = commands |> Enum.map(&command_name_width/1)
+    Enum.max(command_lengths)
+  end
+
+  defp command_name_width(command) do
+    command.name |> to_string |> byte_size
   end
 
   defp format_argument(%Argument{type: :boolean}), do: nil
