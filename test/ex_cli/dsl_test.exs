@@ -21,6 +21,7 @@ defmodule ExCLI.DSLTest do
     app = SampleCLI.__app__
     assert [command] = app.commands
     assert command.name == :hello
+    assert command.aliases == [:hi]
     assert [%Argument{name: name, help: help}] = command.options
     assert command.long_description == "Gives a nice a warm greeting to whoever would listen\n"
     assert name == :from

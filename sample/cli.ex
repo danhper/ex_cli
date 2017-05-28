@@ -10,6 +10,7 @@ defmodule MyApp.SampleCLI do
   option :verbose, help: "Increase the verbosity level", aliases: [:v], count: true
 
   command :hello do
+    aliases [:hi]
     description "Greets the user"
     long_description """
     Gives a nice a warm greeting to whoever would listen

@@ -41,6 +41,7 @@ defmodule MyApp.SampleCLI do
   option :verbose, count: true, aliases: [:v]
 
   command :hello do
+    aliases [:hi]
     description "Greets the user"
     long_description """
     Gives a nice a warm greeting to whoever would listen
@@ -68,6 +69,12 @@ Which can be used in the following way.
 
 ```
 sample_cli hello -vv world --from me
+```
+
+or using the command's alias:
+
+```
+sample_cli hi -vv world --from me
 ```
 
 The application usage will be shown if the parsing fails. The above example would show:

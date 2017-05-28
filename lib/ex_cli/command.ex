@@ -5,6 +5,7 @@ defmodule ExCLI.Command do
     :name,
     :description,
     :long_description,
+    aliases: [],
     arguments: [],
     options: [],
     normalized_options: %{}
@@ -14,6 +15,7 @@ defmodule ExCLI.Command do
     name: atom,
     description: String.t,
     long_description: String.t,
+    aliases: [atom],
     arguments: [ExCLI.Argument.t],
     options: [ExCLI.Argument.t],
     normalized_options: map
@@ -31,5 +33,9 @@ defmodule ExCLI.Command do
     |> Map.put(:arguments, Enum.reverse(command.arguments))
     |> Map.put(:options, Enum.reverse(command.options))
     |> Map.put(:normalized_options, ExCLI.Util.generate_options(command.options, opts))
+  end
+
+  def match?(command, name) do
+    command.name == name || Enum.any?(command.aliases, &(&1 == name))
   end
 end
