@@ -7,6 +7,7 @@ defmodule ExCLI.Formatter.TextTest do
 
   Commands
      talk    Talks to the user
+     speak
      hello   Greets the user
   """
 
@@ -20,6 +21,8 @@ defmodule ExCLI.Formatter.TextTest do
 
   \t\t\ttalk    Talks to the user
 
+  \t\t\tspeak
+
   \t\t\thello   Greets the user
   """
 
@@ -32,6 +35,6 @@ defmodule ExCLI.Formatter.TextTest do
   end
 
   defp expected(output) do
-    output |> String.trim_trailing("\n")
+    output |> String.replace_trailing("\n", "")
   end
 end
