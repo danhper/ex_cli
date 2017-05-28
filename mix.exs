@@ -24,7 +24,14 @@ defmodule ExCLI.Mixfile do
 
 
   def application do
-    [applications: [:logger]]
+    [applications: applications(Mix.env)]
+  end
+
+  defp applications(:test) do
+    applications(:all) ++ [:hackney]
+  end
+  defp applications(_all) do
+    [:logger]
   end
 
   defp deps do
