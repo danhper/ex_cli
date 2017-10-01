@@ -59,6 +59,17 @@ defmodule ExCLI.DSLTest do
     assert function_exported?(Mix.Tasks.Foo, :run, 1)
   end
 
+  test "mix nested task" do
+    module = quote do
+      defmodule NestedTaskCLI do
+        use ExCLI.DSL, mix_task: :'foo.bar'
+      end
+    end
+    Code.eval_quoted(module)
+    assert Code.ensure_loaded?(Mix.Tasks.Foo.Bar)
+    assert function_exported?(Mix.Tasks.Foo.Bar, :run, 1)
+  end
+
   test "escript" do
     module = quote do
       defmodule EscriptCLI do

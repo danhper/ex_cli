@@ -252,7 +252,9 @@ defmodule ExCLI.DSL do
     name
     |> to_string()
     |> String.replace_leading("Elixir.", "")
-    |> Macro.camelize
+    |> String.split(".")
+    |> Enum.map(&Macro.camelize/1)
+    |> Enum.join(".")
   end
 
   defmacro __before_compile__(_env) do
