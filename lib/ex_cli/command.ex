@@ -36,6 +36,7 @@ defmodule ExCLI.Command do
   end
 
   def match?(command, name) do
+    # note that this will also match the nil (i.e. default) command
     command.name == name || Enum.any?(command.aliases, &(&1 == name))
   end
 end

@@ -234,6 +234,19 @@ defmodule ExCLI.DSL do
     end
   end
 
+  @spec default_command(Keyword.t) :: any
+  defmacro default_command(do: block) do
+    quote do
+      @command %ExCLI.Command{}
+      if Enum.any?(@app.commands, &(&1.name == nil)) do 
+        raise "Cannot have more than one default command."
+      end
+      unquote(block)
+      @app Map.put(@app, :commands, [@command | @app.commands])
+      @command nil
+    end
+  end
+
   @doc false
   def __define_mix_task__(mod, app, name) do
     app = Macro.escape(app)

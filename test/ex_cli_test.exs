@@ -19,6 +19,10 @@ defmodule ExCLITest do
     end) == "Hello world!\n"
 
     assert capture_io(fn ->
+      ExCLI.run(MyApp.SampleCLIWithDefaultCommand, [])
+    end) == "Hello world with defaults!\n"
+
+    assert capture_io(fn ->
       ExCLI.run(MyApp.SampleCLI, ["-vv", "hello", "world", "--from", "Daniel"])
     end) == "Running hello command.\nDaniel says: Hello world!\n"
   end
