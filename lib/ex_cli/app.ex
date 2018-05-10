@@ -37,4 +37,9 @@ defmodule ExCLI.App do
     |> Map.put(:commands, Enum.map(app.commands, &ExCLI.Command.finalize(&1, app.opts)))
     |> Map.put(:normalized_options, ExCLI.Util.generate_options(app.options, app.opts))
   end
+
+  @doc false
+  def has_default_command?(app) do
+    Enum.any?(app.commands, &(is_nil(&1.name)))  
+  end
 end

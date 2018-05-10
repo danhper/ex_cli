@@ -238,7 +238,7 @@ defmodule ExCLI.DSL do
   defmacro default_command(do: block) do
     quote do
       @command %ExCLI.Command{}
-      if Enum.any?(@app.commands, &(&1.name == nil)) do 
+      if ExCLI.App.has_default_command?(@app) do
         raise "Cannot have more than one default command."
       end
       unquote(block)

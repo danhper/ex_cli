@@ -5,7 +5,8 @@ defmodule ExCLI.Formatter.Text do
 
   def format(app, opts \\ []) do
     opts = opts |> Keyword.put_new(:name, app.name) |> make_app_opts()
-    arguments = format_options(app.options) ++ ["<command>", "[<args>]"]
+    command = if ExCLI.App.has_default_command?(app), do: "[<command>]", else: "<command>"
+    arguments = format_options(app.options) ++ [command, "[<args>]"]
     formatted_arguments = Util.pretty_join(arguments, opts)
 
     opts[:banner]
@@ -34,7 +35,7 @@ defmodule ExCLI.Formatter.Text do
   end
 
   def format_command(command, opts \\ []) do
-    name = Atom.to_string(command.name)
+    name = Atom.to_string(command.name || :DEFAULT)
     name_width = command_name_width(command)
     column_width = Keyword.get(opts, :column_width, name_width)
     spaces = column_width - name_width + 3
@@ -52,7 +53,7 @@ defmodule ExCLI.Formatter.Text do
   end
 
   defp command_name_width(command) do
-    command.name |> to_string |> byte_size
+    (command.name || :DEFAULT) |> to_string |> byte_size
   end
 
   defp format_argument(%Argument{type: :boolean}), do: nil

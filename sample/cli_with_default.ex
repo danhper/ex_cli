@@ -10,6 +10,11 @@ defmodule MyApp.SampleCLIWithDefaultCommand do
   option :verbose, help: "Increase the verbosity level", aliases: [:v], count: true
 
   default_command do
+    aliases [:hi]
+    description "Greets the user"
+    long_description """
+    Gives a nice a warm greeting to whoever would listen
+    """
     run _ do
       IO.puts("Hello world with defaults!")
     end
