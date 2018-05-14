@@ -69,6 +69,10 @@ defmodule ExCLI.DSL do
         @app.name
       end
 
+      def default_command do
+        @app.default_command
+      end
+
       if opts[:escript] do
         def main(args) do
           ExCLI.run!(__MODULE__, args)
@@ -87,6 +91,20 @@ defmodule ExCLI.DSL do
         raise "name cannot be called inside a command block"
       else
         @app Map.put(@app, :name, name)
+      end
+    end
+  end
+
+  @doc """
+  Set the `default_command` of the application
+  """
+  @spec default_command(atom) :: any
+  defmacro default_command(name) do
+    quote bind_quoted: [name: name] do
+      if @command do
+        raise "default_command cannot be called inside a command block"
+      else
+        @app Map.put(@app, :default_command, name)
       end
     end
   end
@@ -228,19 +246,6 @@ defmodule ExCLI.DSL do
   defmacro command(name, do: block) do
     quote do
       @command %ExCLI.Command{name: unquote(name)}
-      unquote(block)
-      @app Map.put(@app, :commands, [@command | @app.commands])
-      @command nil
-    end
-  end
-
-  @spec default_command(Keyword.t) :: any
-  defmacro default_command(do: block) do
-    quote do
-      @command %ExCLI.Command{}
-      if ExCLI.App.has_default_command?(@app) do
-        raise "Cannot have more than one default command."
-      end
       unquote(block)
       @app Map.put(@app, :commands, [@command | @app.commands])
       @command nil

@@ -85,7 +85,7 @@ defmodule ExCLI.Parser do
   defp extract_command([{:arg, command} | rest]), do: {String.to_atom(command), rest}
 
   defp find_command(app, command_name) do
-    case Enum.find(app.commands, &(Command.match?(&1, command_name))) do
+    case Enum.find(app.commands, &(Command.match?(&1, command_name || app.default_command))) do
       nil ->
         if command_name == nil do
           {:error, :no_command, []}
