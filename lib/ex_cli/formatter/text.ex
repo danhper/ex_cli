@@ -4,8 +4,12 @@ defmodule ExCLI.Formatter.Text do
   alias ExCLI.{Argument, Util}
 
   def format(app, opts \\ []) do
-    opts = opts |> Keyword.put_new(:name, app.name) |> make_app_opts()
-    arguments = format_options(app.options) ++ ["<command>", "[<args>]"]
+    opts = opts
+    |> Keyword.put_new(:name, app.name)
+    |> Keyword.put_new(:default_command, app.default_command)
+    |> make_app_opts()
+    command = if is_nil(app.default_command), do: "<command>", else: "[<command>]"
+    arguments = format_options(app.options) ++ [command, "[<args>]"]
     formatted_arguments = Util.pretty_join(arguments, opts)
 
     opts[:banner]
@@ -28,8 +32,9 @@ defmodule ExCLI.Formatter.Text do
   def format_commands(commands, opts \\ []) do
     opts = make_opts(opts)
     column_width = command_name_column_width(commands)
+    default_command = opts[:default_command]
     commands
-    |> Enum.map(&format_command(&1, column_width: column_width))
+    |> Enum.map(&format_command(&1, column_width: column_width, default_command: default_command))
     |> Enum.join("#{opts[:newline]}" <> String.duplicate(opts[:pad_with], 3))
   end
 
@@ -38,10 +43,11 @@ defmodule ExCLI.Formatter.Text do
     name_width = command_name_width(command)
     column_width = Keyword.get(opts, :column_width, name_width)
     spaces = column_width - name_width + 3
+    default_tag = if command.name == opts[:default_command], do: " (default)", else: ""
     if description = command.description do
-      name <> String.duplicate(" ", spaces) <> description
+      name <> String.duplicate(" ", spaces) <> description <> default_tag
     else
-      name
+      name <> default_tag
     end
   end
 

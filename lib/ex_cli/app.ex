@@ -8,6 +8,7 @@ defmodule ExCLI.App do
     options: [],
     normalized_options: %{},
     commands: [],
+    default_command: nil,
     opts: []
   ]
 
@@ -18,6 +19,7 @@ defmodule ExCLI.App do
     options: [ExCLI.Argument.t],
     normalized_options: map,
     commands: [ExCLI.Command.t],
+    default_command: atom,
     opts: Keyword.t
   }
 
@@ -32,9 +34,16 @@ defmodule ExCLI.App do
 
   @doc false
   def finalize(app) do
-    app
+    app = app
     |> Map.put(:options, Enum.reverse(app.options))
     |> Map.put(:commands, Enum.map(app.commands, &ExCLI.Command.finalize(&1, app.opts)))
     |> Map.put(:normalized_options, ExCLI.Util.generate_options(app.options, app.opts))
+
+    if not is_nil(app.default_command) do
+      if not Enum.any?(app.commands, &(&1.name == app.default_command)) do
+        raise "Default command #{app.default_command} not defined"
+      end
+    end
+    app
   end
 end
