@@ -159,7 +159,7 @@ Check out the [documentation][1] for more information.
 
     When the usage and help parts are done, there are a few improvements that will be nice to have in the command parser:
 
-      * [ ] the ability to set a default command
+      * [x] the ability to set a default command
       * [ ] the ability to easily delegate a command to another module
       * [x] command aliases
 
