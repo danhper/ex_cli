@@ -1,7 +1,7 @@
 defmodule ExCLI.Mixfile do
   use Mix.Project
 
-  @version "0.1.4"
+  @version "0.1.5"
 
   def project do
     [app: :ex_cli,
@@ -37,7 +37,7 @@ defmodule ExCLI.Mixfile do
   defp deps do
     [{:excoveralls, "~> 0.5", only: :test},
      {:earmark,   "~> 1.0", only: :docs},
-     {:ex_doc,    "~> 0.13", only: :docs}]
+     {:ex_doc,    "~> 0.19", only: :docs}]
   end
 
   defp package do
