@@ -43,7 +43,7 @@ defmodule ExCLI.Mixfile do
   defp package do
     [
       maintainers: ["Daniel Perez"],
-      files: ["lib", "mix.exs", "README.md"],
+      files: ["lib", "mix.exs", ".formatter.exs", "README.md"],
       licenses: ["MIT"],
       links: %{
         "GitHub" => "https://github.com/tuvistavie/ex_cli",
