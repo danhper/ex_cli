@@ -97,7 +97,7 @@ Pass `escript: true` to the `use ExCLI.DSL` and set the module as `escript` `:ma
 ```elixir
 # lib/my_escript_cli.ex
 defmodule MyEscriptCLI do
-  use ExCLI, escript: true
+  use ExCLI.DSL, escript: true
 end
 
 # mix.exs
@@ -116,7 +116,7 @@ Pass `mix_task: TASK_NAME` to the `use ExCLI.DSL`.
 ```elixir
 # lib/my_cli_task.ex
 defmodule MyCLITask do
-  use ExCLI, mix_task: :great_task
+  use ExCLI.DSL, mix_task: :great_task
 end
 ```
 
